@@ -2,28 +2,26 @@ package parser
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"strings"
 )
 
-func ResolveValue(arg string) string {
+// Output is where the interpreter writes. Tests point it at a buffer; the CLI
+// leaves it on stdout.
+var Output io.Writer = os.Stdout
 
-	if strings.HasPrefix(arg, "[") && strings.HasSuffix(arg, "]") {
-		SetVariable("__temp__", arg, "expr")
-		return Variables["__temp__"].Value //TODO: make a better way of doing this.
+func errorf(format string, args ...any) {
+	fmt.Fprintf(Output, format, args...)
+}
+
+func ResolveValue(arg string) string {
+	if v, ok := scope.Vars[arg]; ok {
+		return v.Display()
 	}
-	// Variables.
-	if v, exists := Variables[arg]; exists {
-		return v.Value
-	}
-	// Booleans and strings
 	return strings.Trim(arg, `"`)
 }
 
-func Getenvready() {
-	fmt.Println("Atom3")
-}
-
-func Print(text string, ttype string) {
-	val := ResolveValue(text)
-	fmt.Println(val)
+func Print(text string) {
+	fmt.Fprintln(Output, text)
 }
