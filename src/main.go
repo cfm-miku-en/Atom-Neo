@@ -18,7 +18,7 @@ func usage() {
 	fmt.Println("       atom repl              try atom line by line")
 	fmt.Println("       atom proxy --to ...    reverse proxy, optionally with https")
 	fmt.Println("       atom fmt [file]        tidy indentation, --check to only report")
-	fmt.Println("       atom install <pkg.zip>  install a package into atom_modules")
+	fmt.Println("       atom install <pkg>      install a package folder or zip")
 	fmt.Println("       atom benchmark [flags]  measure this build")
 	fmt.Println("       atom <file.atom>        run one file")
 	fmt.Println()

@@ -192,7 +192,7 @@ atom run [file.atom]     run the project here, or one file
 atom run --watch         restart when files change
 atom repl                try statements as you type them
 atom fmt [file]          tidy indentation, --check to only report
-atom install <pkg.zip>   install a package into atom_modules
+atom install <pkg>       install a package folder or zip
 atom benchmark           measure this build
 atom proxy --to ...      reverse proxy, optionally with https
 atom <file.atom>         run one file
@@ -219,9 +219,16 @@ A project is a folder with an `atom.json`:
 
 `atom run` with no arguments runs `main`.
 
-A package is a zip with an `atom.json` inside. `atom install thing.zip` unpacks it into
-`atom_modules/`, and `import thing` makes it available. Packages either carry `.atom`
-source or bind to a module compiled into the interpreter.
+A package is a folder with an `atom.json` in it, or that folder zipped up. Both install the
+same way:
+
+```bash
+atom install packages/web
+atom install web.zip
+```
+
+That drops it into `atom_modules/`, and `import web` makes it available. Packages either
+carry `.atom` source or bind to a module compiled into the interpreter.
 
 Names are normalised the way PyPI learned to: case is ignored and `-`, `_` and `.` all
 collapse together, so two packages cannot differ only by punctuation.
