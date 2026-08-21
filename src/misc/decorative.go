@@ -4,6 +4,8 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+
+	"Atom3/src/expr"
 )
 
 func ClearTerminal() {
@@ -17,11 +19,11 @@ func ClearTerminal() {
 	cmd.Run()
 }
 func ShowBanner() {
-	println("Atom3 Compiler.")
-	println("Release: 2026.0")
-	println("Made by WawaDev (formerly spacecat) and the Atom3 Team.")
-	println("Three years of nothing, Third attempt at a new programming language and three mugs of tea.")
-
 	ClearTerminal()
 
+	println("Atom3 Compiler.")
+	println("Release: 2026.0")
+	println("Engine: " + expr.Engine)
+	println("Made by WawaDev (formerly spacecat) and the Atom3 Team.")
+	println("Three years of nothing, Third attempt at a new programming language and three mugs of tea.")
 }
