@@ -25,7 +25,7 @@ func ImportModule(name string) {
 	if manifest.Native != "" {
 		m, ok := builtins.Native(manifest.Native)
 		if !ok {
-			errorf("[Import Error]: '%s' needs native module '%s', which this build of Atom3 does not provide\n", name, manifest.Native)
+			errorf("[Import Error]: '%s' needs native module '%s', which this build of Atom-Neo does not provide\n", name, manifest.Native)
 			return
 		}
 		builtins.Activate(m)

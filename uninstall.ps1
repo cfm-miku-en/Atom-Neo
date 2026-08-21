@@ -4,21 +4,21 @@
     Removes the atom command installed by install.ps1.
 
 .PARAMETER InstallDir
-    Where atom was installed. Defaults to %LOCALAPPDATA%\Atom.
+    Where atom was installed. Defaults to %LOCALAPPDATA%\Atom-Neo.
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File uninstall.ps1
 #>
 [CmdletBinding()]
 param(
-    [string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'Atom')
+    [string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'Atom-Neo')
 )
 
 $ErrorActionPreference = 'Stop'
 $binDir = Join-Path $InstallDir 'bin'
 
 Write-Host ''
-Write-Host 'Removing Atom' -ForegroundColor Cyan
+Write-Host 'Removing Atom-Neo' -ForegroundColor Cyan
 Write-Host ''
 
 # Only the entry this installer added is removed; the rest of PATH is rewritten

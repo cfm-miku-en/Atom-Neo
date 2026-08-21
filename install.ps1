@@ -5,12 +5,12 @@
 
 .DESCRIPTION
     Builds atom.exe (or uses one you already built), copies it under
-    %LOCALAPPDATA%\Atom\bin, and puts that folder on your user PATH.
+    %LOCALAPPDATA%\Atom-Neo\bin, and puts that folder on your user PATH.
     No administrator rights are needed and nothing outside your profile
     is touched.
 
 .PARAMETER InstallDir
-    Where to install. Defaults to %LOCALAPPDATA%\Atom.
+    Where to install. Defaults to %LOCALAPPDATA%\Atom-Neo.
 
 .PARAMETER NoPath
     Install the binary but leave PATH alone.
@@ -20,7 +20,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'Atom'),
+    [string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'Atom-Neo'),
     [switch]$NoPath
 )
 
@@ -32,7 +32,7 @@ $target = Join-Path $binDir 'atom.exe'
 function Write-Step($text) { Write-Host "  $text" }
 
 Write-Host ''
-Write-Host 'Installing Atom' -ForegroundColor Cyan
+Write-Host 'Installing Atom-Neo' -ForegroundColor Cyan
 Write-Host ''
 
 # Prefer building from source so the install matches this checkout; fall back to

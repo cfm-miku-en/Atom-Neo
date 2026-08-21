@@ -21,9 +21,9 @@ func ClearTerminal() {
 func ShowBanner() {
 	ClearTerminal()
 
-	println("Atom3 Compiler.")
+	println("Atom-Neo")
 	println("Release: 2026.0")
 	println("Engine: " + expr.Engine)
-	println("Made by WawaDev (formerly spacecat) and the Atom3 Team.")
+	println("A fork of Atom3 by WawaDev (formerly spacecat) and the Atom3 Team.")
 	println("Three years of nothing, Third attempt at a new programming language and three mugs of tea.")
 }
