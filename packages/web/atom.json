@@ -1,0 +1,6 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "description": "HTTP server backed by the compiled-in web module",
+  "native": "web"
+}
