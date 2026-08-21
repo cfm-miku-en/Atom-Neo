@@ -1,0 +1,6 @@
+[Parse Error] testdata/errors.atom line 2: var needs the form: var x = value
+    var oops
+[Parse Error] testdata/errors.atom line 3: not a statement
+    this is nonsense
+before
+after

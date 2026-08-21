@@ -1,0 +1,32 @@
+var i = 0
+while [i < 3] {
+	print(i)
+	var i = [i + 1]
+}
+repeat 2 {
+	print("tick")
+}
+each x in [10, 20] {
+	print(x)
+}
+var n = 5
+if [n > 10] {
+	print("big")
+}
+else if [n > 3] {
+	print("medium")
+}
+else {
+	print("small")
+}
+var j = 0
+while [j < 10] {
+	var j = [j + 1]
+	if [j == 2] {
+		continue
+	}
+	if [j > 4] {
+		break
+	}
+	print(j)
+}

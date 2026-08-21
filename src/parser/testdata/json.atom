@@ -1,0 +1,8 @@
+var data = [name: "atom", tags: ["fast", "small"], version: 3]
+var s = [tojson(data)]
+print(s)
+var back = [fromjson(s)]
+print([back @ "name"])
+print([back @ "version"])
+print([(back @ "tags") @ 0])
+print([len(back)])

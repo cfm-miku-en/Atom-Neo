@@ -1,0 +1,19 @@
+var m = [name: "atom", version: 3]
+print(m)
+print([m @ "name"])
+print([len(m)])
+print([keys(m)])
+print([values(m)])
+print([has(m, "name")])
+print([has(m, "nope")])
+put(m, "year", 2026)
+print([m @ "year"])
+del(m, "year")
+print([has(m, "year")])
+var nested = [host: "local", ports: [80, 443]]
+print([(nested @ "ports") @ 1])
+each k in m {
+	print(k)
+}
+var empty = [:]
+print([len(empty)])

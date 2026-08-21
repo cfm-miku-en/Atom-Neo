@@ -1,0 +1,4 @@
+print("before")
+var oops
+this is nonsense
+print("after")

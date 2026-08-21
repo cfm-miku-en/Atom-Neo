@@ -1,0 +1,13 @@
+var a = "hello"
+var b = "world"
+print([a + " " + b])
+print([upper(a)])
+print([lower("ABC")])
+print([len(a)])
+print([contains(a, "ell")])
+print([split("a,b,c", ",")])
+print([join(["x", "y"], "-")])
+print([trim("  pad  ")])
+print([a == "hello"])
+print([num("42") + 8])
+print([str(7) + "!"])

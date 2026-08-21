@@ -1,0 +1,40 @@
+func add(a, b) {
+	return [a + b]
+}
+print([add(2, 3)])
+func fact(n) {
+	if [n <= 1] {
+		return 1
+	}
+	return [n * fact(n - 1)]
+}
+print([fact(5)])
+func fib(n) {
+	if [n < 2] {
+		return n
+	}
+	return [fib(n - 1) + fib(n - 2)]
+}
+print([fib(10)])
+var name = "outer"
+func shadow(name) {
+	return [upper(name)]
+}
+print([shadow("inner")])
+print(name)
+global count = 0
+func bump() {
+	global count = [count + 1]
+	return count
+}
+bump()
+bump()
+print(count)
+print([early("x")])
+func early(v) {
+	return [v + "!"]
+}
+func noret() {
+	print("side effect")
+}
+noret()
