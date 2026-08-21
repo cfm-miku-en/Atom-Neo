@@ -50,8 +50,8 @@ atom benchmark --compare
 
 ## Docs
 
-**[DOCS.md](DOCS.md)** — the language, every builtin, the commands, the web module and the
-proxy.
+- **[docs/reference.md](docs/reference.md)** — the language, every builtin, the commands, the web module and the proxy
+- **[docs/packages.md](docs/packages.md)** — how to make and share a package
 
 ## Credit
 

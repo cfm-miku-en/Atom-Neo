@@ -1,0 +1,6 @@
+{
+  "name": "greet",
+  "version": "1.0.0",
+  "description": "example package, see docs/packages.md",
+  "main": "greet.atom"
+}

@@ -1,0 +1,7 @@
+func greeting(name) {
+	return ["hello " + name]
+}
+
+func shout(name) {
+	return [upper(greeting(name))]
+}

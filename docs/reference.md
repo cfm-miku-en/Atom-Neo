@@ -1,6 +1,6 @@
 # Atom-Neo reference
 
-Back to the [README](README.md).
+Back to the [README](../README.md). See also [making a package](packages.md).
 
 - [The language](#the-language)
 - [Builtins](#builtins)
