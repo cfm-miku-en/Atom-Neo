@@ -7,3 +7,11 @@ test.atom
 test.py
 testlegacy.atom
 legacy/
+
+# build output and installed packages
+atom3.exe
+atom3
+atom_modules/
+atom-linux-amd64
+atom-certs/
+atom.exe
