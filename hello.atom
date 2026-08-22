@@ -1,21 +1,8 @@
 import web
 
-func hello(path) {
-	return "<h1>hello from an atom function</h1>"
-}
-
-func listing(path) {
-	var items = ["one", "two", "three"]
-	return ["<ul><li>" + join(items, "</li><li>") + "</li></ul>"]
-}
-
 web.static("./site")
 web.notfound("404.html")
-web.log(true)
-
 web.route("/", "index.html")
-web.text("/plain", "hello from atom")
-web.handle("/hello", hello)
-web.handle("/list", listing)
+web.log(true)
 
 web.listen(9143)
