@@ -37,9 +37,8 @@ type Ref struct {
 // addressed by index. Calls used to build a map per invocation, which was the
 // overwhelming majority of everything the interpreter allocated.
 type Scope struct {
-	slots  []Value
-	filled []bool
-	ids    map[string]int
+	slots []Value
+	ids   map[string]int
 
 	// Runtime frame storage; base is where the running call's locals start.
 	stack []Value
@@ -64,8 +63,7 @@ func (s *Scope) Slot(name string) int {
 
 	id := len(s.slots)
 	s.ids[name] = id
-	s.slots = append(s.slots, Value{})
-	s.filled = append(s.filled, false)
+	s.slots = append(s.slots, Value{Kind: Unset})
 	return id
 }
 
@@ -148,8 +146,7 @@ func (s *Scope) Store(ref Ref, v Value) {
 // compiled earlier still point at the right places afterwards.
 func (s *Scope) Clear() {
 	for i := range s.slots {
-		s.slots[i] = Value{}
-		s.filled[i] = false
+		s.slots[i] = Value{Kind: Unset}
 	}
 	s.stack = s.stack[:0]
 	s.base = 0
@@ -158,7 +155,7 @@ func (s *Scope) Clear() {
 // Lookup finds a global by name. Locals are addressed by index and carry no
 // names at run time, so they are not reachable this way.
 func (s *Scope) Lookup(name string) (Value, bool) {
-	if id, ok := s.ids[name]; ok && s.filled[id] {
+	if id, ok := s.ids[name]; ok && s.slots[id].Kind != Unset {
 		return s.slots[id], true
 	}
 	return Value{}, false
@@ -190,7 +187,6 @@ func (s *Scope) SetGlobal(name string, v Value) {
 // SetSlot writes straight to a global slot, ignoring any call frame.
 func (s *Scope) SetSlot(id int, v Value) {
 	s.slots[id] = v
-	s.filled[id] = true
 }
 
 // Invoke is installed by the interpreter so expressions can call user-defined
@@ -218,8 +214,8 @@ func variable(ref Ref) Expr {
 	}
 
 	return func(s *Scope) Value {
-		if s.filled[ref.Index] {
-			return s.slots[ref.Index]
+		if v := s.slots[ref.Index]; v.Kind != Unset {
+			return v
 		}
 
 		// A bare name that is not a variable may still be a function, which is
@@ -391,13 +387,33 @@ func binary(o op, l, r Expr) Expr {
 	case opNe:
 		return func(s *Scope) Value { return Boolean(!equal(l(s), r(s))) }
 	case opLt:
-		return func(s *Scope) Value { return Boolean(l(s).Num < r(s).Num) }
+		return func(s *Scope) Value {
+			if l(s).Num < r(s).Num {
+				return yes
+			}
+			return no
+		}
 	case opGt:
-		return func(s *Scope) Value { return Boolean(l(s).Num > r(s).Num) }
+		return func(s *Scope) Value {
+			if l(s).Num > r(s).Num {
+				return yes
+			}
+			return no
+		}
 	case opLe:
-		return func(s *Scope) Value { return Boolean(l(s).Num <= r(s).Num) }
+		return func(s *Scope) Value {
+			if l(s).Num <= r(s).Num {
+				return yes
+			}
+			return no
+		}
 	case opGe:
-		return func(s *Scope) Value { return Boolean(l(s).Num >= r(s).Num) }
+		return func(s *Scope) Value {
+			if l(s).Num >= r(s).Num {
+				return yes
+			}
+			return no
+		}
 	case opIndex:
 		return func(s *Scope) Value { return element(l(s), r(s)) }
 	}

@@ -18,6 +18,10 @@ const (
 	List
 	Map
 	Func
+
+	// Unset marks a global that has never been assigned. It is deliberately
+	// not the zero value, so a variable holding 0 stays distinguishable.
+	Unset
 )
 
 // box carries whichever collection a Value holds. A value is never both a list
@@ -39,12 +43,16 @@ type Value struct {
 func Num(f float64) Value { return Value{Kind: Number, Num: f} }
 func Str(s string) Value  { return Value{Kind: Text, str: &s} }
 
+var (
+	yes = Value{Kind: Bool, Num: 1}
+	no  = Value{Kind: Bool}
+)
+
 func Boolean(b bool) Value {
-	v := Value{Kind: Bool}
 	if b {
-		v.Num = 1
+		return yes
 	}
-	return v
+	return no
 }
 
 // FuncRef names a user-defined function so it can be passed around as a value.

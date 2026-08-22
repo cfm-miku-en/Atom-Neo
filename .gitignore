@@ -18,3 +18,4 @@ atom.exe
 web.zip
 dist/
 installer/atom.exe
+*.test.exe

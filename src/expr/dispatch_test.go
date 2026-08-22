@@ -91,3 +91,61 @@ func BenchmarkDispatchReal(b *testing.B) {
 		e(s)
 	}
 }
+
+// A bytecode virtual machine is the usual next step after a tree walker, so it
+// is measured here too rather than argued about. The program is the same
+// expression: (x + y) + (x + 1).
+type instr struct {
+	code byte
+	arg  float64
+	slot int
+}
+
+const (
+	opcPush byte = iota
+	opcLoad
+	opcPlus
+)
+
+func BenchmarkDispatchBytecode(b *testing.B) {
+	s := benchScope()
+
+	program := []instr{
+		{code: opcLoad, slot: 0},
+		{code: opcLoad, slot: 1},
+		{code: opcPlus},
+		{code: opcLoad, slot: 0},
+		{code: opcPush, arg: 1},
+		{code: opcPlus},
+		{code: opcPlus},
+	}
+
+	stack := make([]float64, 0, 8)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	var total float64
+	for i := 0; i < b.N; i++ {
+		stack = stack[:0]
+
+		// Go has no computed goto, so every opcode leaves through this one
+		// switch. In C each opcode would end with its own indirect jump.
+		for pc := 0; pc < len(program); pc++ {
+			in := program[pc]
+
+			switch in.code {
+			case opcPush:
+				stack = append(stack, in.arg)
+			case opcLoad:
+				stack = append(stack, s.slots[in.slot].Num)
+			case opcPlus:
+				n := len(stack)
+				stack[n-2] += stack[n-1]
+				stack = stack[:n-1]
+			}
+		}
+		total += stack[0]
+	}
+	_ = total
+}
