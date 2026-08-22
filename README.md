@@ -34,7 +34,7 @@ print([hi("world")])
 
 ## Install
 
-**Windows** — grab `AtomNeoSetup-x.y.z.exe` from
+**Windows.** Grab `AtomNeoSetup-x.y.z.exe` from
 [Releases](https://github.com/cfm-miku-en/Atom-Neo/releases) and run it. Per user, no
 administrator prompt, uninstalls from Add or Remove Programs.
 
@@ -44,7 +44,7 @@ administrator prompt, uninstalls from Add or Remove Programs.
 curl -fsSL https://raw.githubusercontent.com/cfm-miku-en/Atom-Neo/main/install.sh | sh
 ```
 
-**From source** — `go build -o atom ./src` (Go 1.26.5+).
+**From source.** `go build -o atom ./src`, with Go 1.26.5 or newer.
 
 macOS is not supported. Build from source if you want to try it.
 
@@ -58,8 +58,8 @@ atom benchmark --compare
 
 ## Docs
 
-- **[docs/reference.md](docs/reference.md)** — the language, every builtin, the commands, the web module and the proxy
-- **[docs/packages.md](docs/packages.md)** — how to make and share a package
+- **[docs/reference.md](docs/reference.md)** covers the language, every builtin, the commands, the web module and the proxy
+- **[docs/packages.md](docs/packages.md)** covers making and sharing a package
 
 ## Credit
 

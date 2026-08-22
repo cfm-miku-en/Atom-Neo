@@ -49,7 +49,7 @@ packages/greet/atom.json
 packages/greet/greet.atom
 ```
 
-**2. Write the manifest** — the json above.
+**2. Write the manifest.** The json above.
 
 **3. Write the code.** Anything you define at the top level becomes available to whoever
 imports it.
@@ -142,8 +142,8 @@ There is no `main`. On import, Atom looks for a native module registered under t
 activates it, which is what makes `web.listen` callable. If the interpreter was built
 without it, the import fails with a clear message rather than a missing function later.
 
-Adding one means writing Go in `src/stdlib/` and registering it in `src/stdlib/stdlib.go` —
-see [`src/stdlib/web`](../src/stdlib/web) for the shape. Native modules cannot be
+Adding one means writing Go in `src/stdlib/` and registering it in `src/stdlib/stdlib.go`.
+See [`src/stdlib/web`](../src/stdlib/web) for the shape. Native modules cannot be
 downloaded and loaded at runtime: Go has no portable way to load compiled code into a
 running program, so they are built in.
 

