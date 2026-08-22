@@ -14,6 +14,10 @@ import (
 
 // Install accepts either a package zip or a folder holding an atom.json, so a
 // package under development does not have to be zipped to be tried.
+// A compressed archive can expand to something enormous, so extraction stops at
+// this total rather than filling the disk on the word of the archive.
+const maxInstallSize = 256 << 20
+
 func Install(source string) (*Manifest, error) {
 	info, err := os.Stat(source)
 	if err != nil {
@@ -117,13 +121,17 @@ func installZip(archive string) (*Manifest, error) {
 		return nil, err
 	}
 
+	budget := int64(maxInstallSize)
 	for _, f := range r.File {
 		if !strings.HasPrefix(f.Name, root) {
 			continue
 		}
-		if err := extract(f, strings.TrimPrefix(f.Name, root), dest); err != nil {
+
+		written, err := extract(f, strings.TrimPrefix(f.Name, root), dest, budget)
+		if err != nil {
 			return nil, err
 		}
+		budget -= written
 	}
 	return m, nil
 }
@@ -172,35 +180,47 @@ func readManifest(f *zip.File) (*Manifest, error) {
 	return &m, nil
 }
 
-func extract(f *zip.File, rel, dest string) error {
+func extract(f *zip.File, rel, dest string, budget int64) (int64, error) {
 	if rel == "" {
-		return nil
+		return 0, nil
 	}
 
 	target := filepath.Join(dest, filepath.FromSlash(rel))
 	if !strings.HasPrefix(target, filepath.Clean(dest)+string(os.PathSeparator)) {
-		return fmt.Errorf("archive entry escapes the install directory: %s", f.Name)
+		return 0, fmt.Errorf("archive entry escapes the install directory: %s", f.Name)
 	}
 
 	if f.FileInfo().IsDir() {
-		return os.MkdirAll(target, 0o755)
+		return 0, os.MkdirAll(target, 0o755)
 	}
 	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
-		return err
+		return 0, err
+	}
+
+	// The declared size rejects an honest bomb before any of it is written; the
+	// limit below catches one that lies in its header.
+	if f.UncompressedSize64 > uint64(budget) {
+		return 0, fmt.Errorf("package is larger than the %d byte limit", maxInstallSize)
 	}
 
 	rc, err := f.Open()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer rc.Close()
 
 	out, err := os.Create(target)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, rc)
-	return err
+	written, err := io.Copy(out, io.LimitReader(rc, budget+1))
+	if err != nil {
+		return written, err
+	}
+	if written > budget {
+		return written, fmt.Errorf("package is larger than the %d byte limit", maxInstallSize)
+	}
+	return written, nil
 }

@@ -87,6 +87,12 @@ func newProxy(target *url.URL, scheme string) *httputil.ReverseProxy {
 	inner := rp.Director
 	rp.Director = func(r *http.Request) {
 		host := r.Host
+
+		// Whatever the client claimed is dropped first. ReverseProxy appends
+		// the address it actually came from, so keeping the old value would
+		// let anyone put any address at the front of the chain.
+		r.Header.Del("X-Forwarded-For")
+
 		inner(r)
 		r.Header.Set("X-Forwarded-Host", host)
 		r.Header.Set("X-Forwarded-Proto", scheme)

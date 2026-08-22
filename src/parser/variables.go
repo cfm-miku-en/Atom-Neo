@@ -26,4 +26,5 @@ func ResetAll() {
 	imported = make(map[string]bool)
 	flow = sigNone
 	returnValue = expr.Value{}
+	callDepth = 0
 }

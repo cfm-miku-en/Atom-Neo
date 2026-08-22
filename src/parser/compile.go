@@ -49,7 +49,19 @@ const (
 	sigReturn
 	sigBreak
 	sigContinue
+
+	// sigAbort unwinds everything and is not cleared on the way out, so a
+	// runaway program stops rather than being caught by the nearest loop.
+	sigAbort
 )
+
+// Runaway recursion used to reach Go's stack limit, which is a fatal error the
+// process cannot recover from. A script should not be able to kill the
+// interpreter, so calls are counted instead. The limit is far past anything a
+// real program needs; the cost is one comparison per call.
+const maxCallDepth = 10000
+
+var callDepth int
 
 var flow signal
 var returnValue expr.Value
@@ -75,7 +87,7 @@ func loopSignal() bool {
 		return true
 	case sigContinue:
 		flow = sigNone
-	case sigReturn:
+	case sigReturn, sigAbort:
 		return true
 	}
 	return false
@@ -216,15 +228,28 @@ func invoke(name string, args []expr.Value) (expr.Value, bool) {
 		return expr.Value{}, true
 	}
 
+	if callDepth >= maxCallDepth {
+		errorf("[Runtime Error]: '%s' recursed past %d calls without returning\n", name, maxCallDepth)
+		flow = sigAbort
+		return expr.Value{}, true
+	}
+
 	// Locals live in a reused stack rather than a fresh map, which is what made
 	// a call cost several allocations.
+	callDepth++
 	previous := scope.PushFrame(fn.locals)
 	for i, a := range args {
 		scope.SetLocal(i, a)
 	}
 
 	execAll(fn.body)
+
 	scope.PopFrame(previous)
+	callDepth--
+
+	if flow == sigAbort {
+		return expr.Value{}, true
+	}
 
 	result := returnValue
 	returnValue = expr.Value{}

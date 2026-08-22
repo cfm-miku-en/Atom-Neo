@@ -158,7 +158,7 @@ web.handle("/hello", hello)
 |---|---|
 | Lists | `push` `pop` `first` `last` `reverse` `range` `contains` `len` |
 | Maps | `dict` `keys` `values` `has` `put` `del` `len` |
-| Strings | `upper` `lower` `trim` `split` `join` `contains` `len` `lines` |
+| Strings | `upper` `lower` `trim` `split` `join` `contains` `len` `lines` `escape` |
 | Math | `floor` `ceil` `round` `abs` `sqrt` `min` `max` `random` `randint` |
 | Convert | `str` `num` `tojson` `fromjson` |
 | Files | `read` `write` `append` `exists` `remove` |
@@ -267,7 +267,7 @@ Inside a handler, `web.path()`, `web.method()` and `web.query(name)` describe th
 
 ```
 func greet(path) {
-	var who = [web.query("who")]
+	var who = [escape(web.query("who"))]
 	if [who == ""] {
 		return "<p>nobody</p>"
 	}
@@ -276,6 +276,10 @@ func greet(path) {
 ```
 
 Clean urls mean `/about` serves `about.html` when no exact match exists.
+
+Put anything that came from the request through `escape` before it goes into a
+page. `web.query("who")` is whatever the visitor typed, so pasting it straight
+into HTML lets them paste a script tag instead.
 
 Some details it does not leave to chance: mime types are registered explicitly rather than
 read from the Windows registry, where javascript is regularly served as plain text;
@@ -328,9 +332,9 @@ One run against CPython 3.14.6:
 ```
 benchmark          atom       python      ratio
 -----------------------------------------------
-loop           100.1M/s      19.9M/s      5.04x
-arith           50.0M/s       9.1M/s      5.52x
-branch          50.0M/s      14.9M/s      3.37x
+loop           100.2M/s      19.6M/s      5.10x
+arith           50.1M/s       9.1M/s      5.48x
+branch         100.2M/s      14.7M/s      6.81x
 ```
 
 Your numbers will differ. Run it yourself rather than trusting these.

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"html"
 	"math"
 	"math/rand"
 	"os"
@@ -116,6 +117,15 @@ var valueBuiltins = map[string]valueFunc{
 			return expr.Boolean(false)
 		}
 		return expr.Boolean(strings.Contains(a[0].Display(), a[1].Display()))
+	},
+
+	// Anything from a request that ends up in a page has to go through this,
+	// or a query parameter becomes a script tag.
+	"escape": func(a []expr.Value) expr.Value {
+		if len(a) != 1 {
+			return expr.Str("")
+		}
+		return expr.Str(html.EscapeString(a[0].Display()))
 	},
 
 	"upper": func(a []expr.Value) expr.Value {

@@ -211,7 +211,13 @@ func serveMissing(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
+// maxBody caps what a request may send, so a handler cannot be fed an endless
+// upload.
+const maxBody = 10 << 20
+
 func handle(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBody)
+
 	if fn, ok := handlers[r.URL.Path]; ok {
 		if builtins.Call == nil {
 			http.Error(w, "handlers unavailable", http.StatusInternalServerError)
