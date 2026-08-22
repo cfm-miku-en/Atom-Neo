@@ -3,132 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Atom-Neo, a small language that isn't slow</title>
-<meta name="description" content="Atom-Neo runs about five times faster than CPython 3.14, and ships with a web server, a reverse proxy, a repl and a formatter already in the box.">
+<title>Atom Neo, a small language that arrives finished</title>
+<meta name="description" content="Atom Neo is one static binary with a web server, a reverse proxy, a repl and a formatter already inside it, and no third party code anywhere in the language.">
+<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1916" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
-<style>
-  :root {
-    --paper: #f4f1ea;
-    --ink: #16181c;
-    --soft: #6b6862;
-    --rule: #ccc6b8;
-    --green: #17703a;
-    --green-lit: #1f8f4a;
-    --serif: "Zilla Slab", Georgia, "Times New Roman", serif;
-    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
-  }
-  * { box-sizing: border-box }
-  html { -webkit-text-size-adjust: 100% }
-  body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font: 15px/1.65 var(--mono);
-    font-feature-settings: "kern";
-  }
-  a { color: var(--green); text-decoration: none; border-bottom: 1px solid var(--rule) }
-  a:hover { color: var(--green-lit); border-bottom-color: var(--green-lit) }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 clamp(18px, 4vw, 40px) }
-  .rule { border: 0; border-top: 1px solid var(--rule); margin: 0 }
-
-  /* masthead */
-  header { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 20px 0 18px }
-  .mark { font-family: var(--serif); font-weight: 600; font-size: 21px; letter-spacing: .01em }
-  .mark b { font-weight: 400 }
-  nav { display: flex; gap: 22px; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase }
-  nav a { color: var(--soft); border-bottom: 0 }
-  nav a:hover { color: var(--ink) }
-
-  /* opening statement */
-  .open { padding: clamp(44px, 7vw, 80px) 0 clamp(40px, 6vw, 64px) }
-  h1 {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(38px, 6.6vw, 74px);
-    line-height: 1.02;
-    letter-spacing: -.015em;
-    margin: 0 0 26px;
-    max-width: 15ch;
-  }
-  h1 i { font-style: italic; color: var(--green) }
-  .lede { font-size: clamp(15px, 1.6vw, 16.5px); line-height: 1.7; max-width: 62ch; color: var(--ink); margin: 0 }
-  .lede + .lede { margin-top: 14px; color: var(--soft) }
-
-  /* acquisition */
-  .get { display: flex; align-items: flex-start; gap: clamp(24px, 4vw, 56px); flex-wrap: wrap; padding: 34px 0 38px }
-  .get-main { flex: 1 1 320px; min-width: 0 }
-  .get-alt { flex: 1 1 320px; min-width: 0 }
-  .label { font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--soft); margin-bottom: 12px }
-  .btn {
-    display: inline-flex; align-items: center; gap: 12px;
-    background: var(--green); color: var(--paper);
-    font-family: var(--mono); font-weight: 600; font-size: 17px;
-    padding: 16px 26px; border: 0; border-bottom: 3px solid #0d4a26;
-  }
-  .btn:hover { background: var(--green-lit); color: var(--paper); border-bottom-color: var(--green) }
-  .meta { font-size: 12.5px; color: var(--soft); margin-top: 12px }
-  .shell { border: 1px solid var(--rule); background: #fbf9f4; padding: 13px 15px; font-size: 13px; overflow-x: auto; white-space: nowrap }
-  .shell .sigil { color: var(--soft); user-select: none }
-
-  /* two column body */
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 56px); padding: 40px 0 44px; align-items: start }
-  h2 { font-family: var(--serif); font-weight: 500; font-size: clamp(25px, 3vw, 32px); line-height: 1.15; margin: 0 0 14px }
-  .body { color: var(--soft); font-size: 14px; line-height: 1.7; margin: 0 0 20px; max-width: 52ch }
-  pre { margin: 0; font-size: 13px; line-height: 1.8; overflow-x: auto; border: 1px solid var(--rule); background: #fbf9f4; padding: 18px 16px }
-  .kw { color: var(--green); font-weight: 500 }
-  .st { color: #9a5b1f }
-  .nu { color: #2c5aa0 }
-  .cm { color: var(--soft); font-style: italic }
-
-  /* measurements */
-  table { width: 100%; border-collapse: collapse; font-size: 14px }
-  caption { text-align: left; font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--soft); padding-bottom: 10px }
-  th, td { padding: 11px 0; border-bottom: 1px solid var(--rule); text-align: right }
-  th:first-child, td:first-child { text-align: left }
-  thead th { font-weight: 400; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); border-bottom-width: 2px; border-bottom-color: var(--ink) }
-  td.win { color: var(--green); font-weight: 600 }
-  .after { font-size: 12.5px; color: var(--soft); padding-top: 12px }
-
-  /* inventory */
-  .inv { padding: 44px 0 8px }
-  .items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(28px, 4vw, 56px) }
-  .item { display: grid; grid-template-columns: 2.4rem 1fr; gap: 14px; padding: 17px 0; border-top: 1px solid var(--rule) }
-  .num { font-size: 12.5px; color: var(--soft); padding-top: 2px }
-  .item h3 { margin: 0 0 3px; font-size: 14.5px; font-weight: 600 }
-  .item p { margin: 0; font-size: 13.5px; line-height: 1.65; color: var(--soft) }
-
-  /* colophon */
-  .colophon { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding: 26px 0 48px; font-size: 12.5px; color: var(--soft) }
-  .colophon a { color: var(--soft) }
-  .self { padding: 24px 0; font-size: 13.5px; color: var(--soft) }
-  .self b { color: var(--ink); font-weight: 600 }
-
-  @media (max-width: 860px) {
-    .cols { grid-template-columns: 1fr; gap: 32px }
-    .items { grid-template-columns: 1fr }
-    h1 { max-width: none }
-  }
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300&text=QuarkQUARK&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
+<script>
+  (function () {
+    var saved = localStorage.getItem("theme");
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+  })();
+</script>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <div class="mark">Atom<b>-Neo</b></div>
+    <div class="mark">Atom <b>Neo</b></div>
     <nav>
-      <a href="https://github.com/cfm-miku-en/Atom-Neo/blob/main/docs/reference.md">Reference</a>
-      <a href="https://github.com/cfm-miku-en/Atom-Neo/blob/main/docs/packages.md">Packages</a>
+      <a href="/quark">Quark</a>
       <a href="https://github.com/cfm-miku-en/Atom-Neo">Source</a>
+      <button class="theme" type="button" aria-label="Switch between light and dark">
+        <svg class="sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.4"/><path d="M12 2.4v2.6M12 19v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.4 12h2.6M19 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9"/></svg>
+        <svg class="moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.8A8.6 8.6 0 0 1 9.2 3.5a8.6 8.6 0 1 0 11.3 11.3z"/></svg>
+      </button>
     </nav>
   </header>
   <hr class="rule">
 
   <div class="open">
-    <h1>A small language that <i>isn't slow</i>.</h1>
-    <p class="lede">Atom-Neo runs about five times faster than CPython 3.14 on its own benchmarks. It arrives as one static binary with a web server, a reverse proxy, a repl and a formatter already inside it.</p>
-    <p class="lede">The language pulls in no dependencies at all. The interpreter is called Quark.</p>
+    <h1>A small language that <i>arrives finished</i>.</h1>
+    <p class="lede">One static binary with a web server, a reverse proxy, a repl and a formatter already inside it. What you copy to a server is a single file, and it runs on a machine with nothing else installed.</p>
+    <p class="lede">The language pulls in no third party code at all. It runs on <a href="/quark">Quark</a>, which is quick enough to stay out of the way.</p>
+  </div>
+
+  <div class="rulebox">
+    <div class="label">Brackets hold the values</div>
+    <dl class="demo">
+      <dt><span class="kw">var</span> xs   = [<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>]</dt>
+      <dd>commas make a list</dd>
+      <dt><span class="kw">var</span> site = [name: <span class="st">"atom"</span>, port: <span class="nu">9143</span>]</dt>
+      <dd>colons make a map</dd>
+      <dt><span class="kw">var</span> n    = [len(xs) * <span class="nu">2</span>]</dt>
+      <dd>the same brackets do the arithmetic</dd>
+      <dt>print([site @ <span class="st">"port"</span>])</dt>
+      <dd>and @ reads out of either one</dd>
+    </dl>
   </div>
   <hr class="rule">
 
@@ -139,7 +63,7 @@
         <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5l7.5-1.05v7.2H3V5.5zM11.5 4.3L21 3v8.65h-9.5V4.3zM3 12.65h7.5v7.2L3 18.5v-5.85zM11.5 12.65H21V21l-9.5-1.35v-7z"/></svg>
         Download the installer
       </a>
-      <div class="meta">AtomNeoSetup-0.1.0.exe, 4.4&nbsp;MB. Installs for you alone, so Windows never asks for an administrator.</div>
+      <div class="meta">Installs for you alone, so Windows never asks for an administrator, and it uninstalls from Add or Remove Programs.</div>
     </div>
     <div class="get-alt">
       <div class="label">Linux</div>
@@ -149,44 +73,73 @@
   </div>
   <hr class="rule">
 
+  <div class="stats">
+    <div class="stat"><b>1</b><span>file to copy to a server</span></div>
+    <div class="stat"><b>0</b><span>third party dependencies</span></div>
+    <div class="stat"><b>4</b><span>tools inside, plus your own packages</span></div>
+  </div>
+  <hr class="rule">
+
   <div class="cols">
     <div>
-      <h2>Brackets hold the values.</h2>
-      <p class="body">One rule covers arithmetic, conditions, lists and maps: anything that produces a value is written inside brackets. A bracket with commas is a list, one with colons is a map, and the same operator reads an element out of either.</p>
-      <p class="body"><a href="https://github.com/cfm-miku-en/Atom-Neo/blob/main/docs/reference.md">Read the reference</a></p>
+      <div class="label">The engine</div>
+      <h2 class="quark-mark">Quark</h2>
+      <p class="body">Hand written, with no parser generator and no third party code anywhere in the language. Expressions compile down to closures instead of running through an interface, and names resolve to indices while they compile, globals to slots and locals to a reusable stack, so a call allocates nothing at all.</p>
+      <p class="body">A bytecode machine was measured too, and lost. Go has no computed goto, so every opcode leaves through the same switch and the processor sees one unpredictable branch. The numbers stay in the test suite, which is how the question stays settled.</p>
+      <p class="body"><a href="/quark">What else was tried, and why it lost</a></p>
     </div>
     <div>
-<pre><span class="kw">var</span> site = [name: <span class="st">"atom"</span>, port: <span class="nu">9143</span>]
-
-<span class="kw">func</span> home(path) {
-  <span class="kw">return</span> [<span class="st">"&lt;h1&gt;"</span> + site @ <span class="st">"name"</span> + <span class="st">"&lt;/h1&gt;"</span>]
-}
-
-web.handle(<span class="st">"/"</span>, home)
-web.listen(site @ <span class="st">"port"</span>)</pre>
+      <table>
+        <caption>One expression, by dispatch strategy</caption>
+        <thead>
+          <tr><th>Strategy</th><th>Per op</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Compiled closures</td><td class="win">2.37ns</td></tr>
+          <tr><td>Bytecode machine</td><td>12.01ns</td></tr>
+          <tr><td>Interfaces</td><td>13.14ns</td></tr>
+        </tbody>
+      </table>
+      <div class="after">Quark uses the first. The losing two are kept as benchmarks rather than deleted, so the choice can be rechecked on your own machine with <code>go test -bench Dispatch ./src/expr/</code> instead of taken on trust.</div>
     </div>
   </div>
   <hr class="rule">
 
   <div class="cols">
     <div>
-      <h2>Measured, never claimed.</h2>
-      <p class="body">The benchmark runs against whichever Python sits on your own machine. It calibrates both sides to the same target duration and keeps the fastest run, because a figure from somebody else's hardware tells you nothing about yours.</p>
-      <p class="body">Run <code>atom benchmark --compare</code> and argue with your own numbers.</p>
+      <h2>A server is six lines.</h2>
+      <p class="body">The web module is compiled into the binary rather than fetched. Static files get clean urls and no directory listings, pages can be built by your own functions, and every server carries read, write and idle timeouts whether you ask for them or not.</p>
+      <p class="body"><a href="https://github.com/cfm-miku-en/Atom-Neo/blob/main/docs/reference.md">Read the reference</a></p>
     </div>
     <div>
-      <table>
-        <caption>One run against CPython 3.14.6</caption>
-        <thead>
-          <tr><th>Benchmark</th><th>Atom</th><th>Python</th><th>Ratio</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>loop</td><td>100.2M/s</td><td>19.6M/s</td><td class="win">5.10&times;</td></tr>
-          <tr><td>arith</td><td>50.1M/s</td><td>9.1M/s</td><td class="win">5.48&times;</td></tr>
-          <tr><td>branch</td><td>100.2M/s</td><td>14.7M/s</td><td class="win">6.81&times;</td></tr>
-        </tbody>
-      </table>
-      <div class="after">Your numbers will differ.</div>
+<pre><span class="kw">import</span> web
+
+<span class="kw">func</span> home(path) {
+  <span class="kw">return</span> [<span class="st">"&lt;h1&gt;hello from atom&lt;/h1&gt;"</span>]
+}
+
+web.handle(<span class="st">"/"</span>, home)
+web.listen(<span class="nu">9143</span>)</pre>
+    </div>
+  </div>
+  <hr class="rule">
+
+  <div class="cols">
+    <div>
+      <h2>It already speaks json.</h2>
+      <p class="body">Lists and maps round-trip through <code>tojson</code> and <code>fromjson</code> without a package, a decoder or a struct to declare first. Files, strings and maths are the same story: they are builtins, so there is nothing to install before the first useful program.</p>
+      <p class="body"><a href="https://github.com/cfm-miku-en/Atom-Neo/blob/main/docs/reference.md">Every builtin, in one table</a></p>
+    </div>
+    <div>
+<pre><span class="kw">var</span> data = [name: <span class="st">"atom"</span>, tags: [<span class="st">"fast"</span>, <span class="st">"small"</span>]]
+
+write(<span class="st">"out.json"</span>, tojson(data))
+
+<span class="kw">var</span> back = [fromjson(read(<span class="st">"out.json"</span>))]
+
+<span class="kw">each</span> tag <span class="kw">in</span> [back @ <span class="st">"tags"</span>] {
+  print([upper(tag)])
+}</pre>
     </div>
   </div>
   <hr class="rule">
@@ -240,7 +193,22 @@ web.listen(site @ <span class="st">"port"</span>)</pre>
   </div>
   <hr class="rule">
 
-  <div class="self"><b>This page is served by Atom-Neo.</b> Not a static host. The site runs on the language it documents.</div>
+  <div class="self">
+    <div>
+      <div class="label">This page is served by Atom Neo</div>
+      <p><b>Not a static host.</b> The site runs on the language it documents, on the web module listed above, behind the proxy listed above it. What follows is the whole of it.</p>
+    </div>
+    <div>
+<pre><span class="kw">import</span> web
+
+web.static(<span class="st">"./site"</span>)
+web.notfound(<span class="st">"404.html"</span>)
+web.route(<span class="st">"/"</span>, <span class="st">"index.html"</span>)
+web.log(<span class="kw">true</span>)
+
+web.listen(<span class="nu">9143</span>)</pre>
+    </div>
+  </div>
   <hr class="rule">
 
   <div class="colophon">
@@ -249,5 +217,16 @@ web.listen(site @ <span class="st">"port"</span>)</pre>
   </div>
 
 </div>
+
+<script>
+  document.querySelector(".theme").addEventListener("click", function () {
+    var root = document.documentElement;
+    var dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    var now = root.getAttribute("data-theme") || (dark ? "dark" : "light");
+    var next = now === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    localStorage.setItem("theme", next);
+  });
+</script>
 </body>
 </html>
