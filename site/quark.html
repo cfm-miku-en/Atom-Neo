@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quark, the engine inside Atom Neo</title>
+<meta name="description" content="Quark is the hand written engine underneath Atom Neo. No parser generator, no third party code, and every dispatch strategy measured rather than assumed.">
+<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1916" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300&text=QuarkQUARK&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
+<script>
+  (function () {
+    var saved = localStorage.getItem("theme");
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+  })();
+</script>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="mark"><a href="/">Atom <b>Neo</b></a></div>
+    <nav>
+      <a href="/quark" aria-current="page">Quark</a>
+      <a href="https://github.com/cfm-miku-en/Atom-Neo">Source</a>
+      <button class="theme" type="button" aria-label="Switch between light and dark">
+        <svg class="sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.4"/><path d="M12 2.4v2.6M12 19v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.4 12h2.6M19 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9"/></svg>
+        <svg class="moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.8A8.6 8.6 0 0 1 9.2 3.5a8.6 8.6 0 1 0 11.3 11.3z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <hr class="rule">
+
+  <div class="quark-hero">
+    <div class="orbits" aria-hidden="true">
+      <svg viewBox="-220 -220 440 440" fill="none">
+        <g class="sys o1"><g transform="rotate(-14)">
+          <ellipse rx="195" ry="72"/>
+          <circle class="p t1" r="4.5"/>
+          <circle class="p t1 lag" r="3"/>
+          <circle class="p t1 lag2" r="2.5"/>
+        </g></g>
+        <g class="sys o2"><g transform="rotate(48)">
+          <ellipse rx="160" ry="96"/>
+          <circle class="p t2" r="4"/>
+          <circle class="p t2 lag" r="2.5"/>
+        </g></g>
+        <g class="sys o3"><g transform="rotate(-62)">
+          <ellipse rx="122" ry="118"/>
+          <circle class="p t3" r="3.5"/>
+          <circle class="p t3 lag" r="2.5"/>
+        </g></g>
+      </svg>
+    </div>
+    <h1 class="quark-mark big">QUARK</h1>
+    <p class="lede">Roughly five times CPython 3.14, with calls that allocate nothing at all, and not one structural decision in it taken on faith.</p>
+  </div>
+  <hr class="rule">
+
+  <div class="stats">
+    <div class="stat"><b>5.1&times;</b><span>faster than CPython 3.14</span></div>
+    <div class="stat"><b>2.37ns</b><span>to evaluate one expression</span></div>
+    <div class="stat"><b>0</b><span>allocations per call</span></div>
+  </div>
+  <hr class="rule">
+
+  <div class="cols">
+    <div>
+      <h2>Measured against your own Python.</h2>
+      <p class="body">The benchmark runs against whichever Python sits on your own machine, calibrates both sides to the same target duration and keeps the fastest run. A figure from somebody else's hardware tells you nothing about yours.</p>
+      <p class="body">Run <code>atom benchmark --compare</code> and argue with your own numbers.</p>
+    </div>
+    <div>
+      <table>
+        <caption>One run against CPython 3.14.6</caption>
+        <thead>
+          <tr><th>Benchmark</th><th>Atom</th><th>Python</th><th>Ratio</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>loop</td><td>100.2M/s</td><td>19.6M/s</td><td class="win">5.10&times;</td></tr>
+          <tr><td>arith</td><td>50.1M/s</td><td>9.1M/s</td><td class="win">5.48&times;</td></tr>
+          <tr><td>branch</td><td>100.2M/s</td><td>14.7M/s</td><td class="win">6.81&times;</td></tr>
+        </tbody>
+      </table>
+      <div class="after">Your numbers will differ.</div>
+    </div>
+  </div>
+  <hr class="rule">
+
+  <div class="cols">
+    <div>
+      <h2>Nothing here is assumed.</h2>
+      <p class="body">Every structural decision in Quark was measured against the alternatives, and the alternatives are still in the test suite. Expressions compile down to closures rather than running through an interface. Names resolve to indices while they compile, globals into numbered slots and function locals onto a reusable stack, so a call allocates nothing at all.</p>
+      <p class="body">Calls used to build a map on every invocation, which turned out to be the overwhelming majority of everything the interpreter allocated. Removing it was worth more than any of the micro-optimisation that came before.</p>
+    </div>
+    <div>
+      <table>
+        <caption>One expression, by dispatch strategy</caption>
+        <thead>
+          <tr><th>Strategy</th><th>Per op</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Compiled closures</td><td class="win">2.37ns</td></tr>
+          <tr><td>Bytecode machine</td><td>12.01ns</td></tr>
+          <tr><td>Interfaces</td><td>13.14ns</td></tr>
+        </tbody>
+      </table>
+      <div class="after">Measured on a Ryzen 7 5700X. Recheck it on yours with <code>go test -bench Dispatch ./src/expr/</code>.</div>
+    </div>
+  </div>
+  <hr class="rule">
+
+  <div class="inv">
+    <div class="label">Tried, measured, rejected</div>
+    <div class="tries">
+      <div class="try">
+        <div>
+          <h3>A fifth machine word</h3>
+          <span class="verdict">Reverted</span>
+        </div>
+        <p>The value type has to stay at four machine words. At five, Go stops returning it in registers and roughly two thirds of the interpreter's speed goes with it. A test fails the build if the struct ever grows, because the cost is invisible in the diff and obvious only in the benchmark.</p>
+      </div>
+      <div class="try">
+        <div>
+          <h3>Closures for statements</h3>
+          <span class="verdict">Reverted</span>
+        </div>
+        <p>Closures win decisively for expressions, so the same treatment looked obvious for statements. It came out about 25% slower and was backed out. The expression win came mostly from choosing the operator while compiling, not from closures in themselves.</p>
+      </div>
+      <div class="try">
+        <div>
+          <h3>A bytecode machine</h3>
+          <span class="verdict">Slower</span>
+        </div>
+        <p>The usual next step after a tree walker, and it lost by a factor of five. Go has no computed goto, so every opcode leaves through the same switch and the processor sees one unpredictable branch instead of many predictable ones.</p>
+      </div>
+      <div class="try">
+        <div>
+          <h3>NaN-boxing</h3>
+          <span class="verdict">Unsafe</span>
+        </div>
+        <p>Not a matter of taste. Go's collector finds pointers through each type's pointer map, so a pointer hidden in the unused bits of a float64 is invisible to it. The object gets freed while it is still being used.</p>
+      </div>
+    </div>
+  </div>
+  <hr class="rule">
+
+  <div class="cols">
+    <div>
+      <h2>It ships inside one binary.</h2>
+      <p class="body">Quark is not distributed separately and there is nothing to configure. It is what runs when you type <code>atom</code>, and it carries the web server, the reverse proxy, the repl and the formatter with it.</p>
+    </div>
+    <div>
+      <div class="label">Get it</div>
+      <a class="btn" href="/">
+        Back to Atom Neo
+      </a>
+      <div class="meta">The language, the benchmarks against CPython, and the download.</div>
+    </div>
+  </div>
+  <hr class="rule">
+
+  <div class="colophon">
+    <span>A fork of <a href="https://github.com/WawaDevX/Atom3">Atom3</a> by WawaDev.</span>
+    <span>v0.1.0, Quark</span>
+  </div>
+
+</div>
+
+<script>
+  document.querySelector(".theme").addEventListener("click", function () {
+    var root = document.documentElement;
+    var dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    var now = root.getAttribute("data-theme") || (dark ? "dark" : "light");
+    var next = now === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    localStorage.setItem("theme", next);
+  });
+</script>
+</body>
+</html>
