@@ -1,5 +1,5 @@
 <div align="center">
-  <img width="640" height=auto alt="Atom" src="https://github.com/user-attachments/assets/04a14b8e-8dfb-4dd5-bd30-a76a5790de93">
+  <img width="640" height=auto alt="Atom" src="[https://github.com/user-attachments/assets/04a14b8e-8dfb-4dd5-bd30-a76a5790de93](https://github.com/cfm-miku-en/Atom-Neo/blob/main/image0.png?raw=true)">
 </div>
 
 ![stars](https://img.shields.io/github/stars/cfm-miku-en/Atom3?style=social)
