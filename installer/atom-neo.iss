@@ -1,8 +1,8 @@
 ; Inno Setup script for Atom Neo.
 ;
 ; Build it with:
-;   go build -ldflags "-s -w -X Atom3/src/misc.Version=v0.1.0" -o installer\atom.exe .\src
-;   "C:\Program Files\Inno Setup 7\ISCC.exe" /DAppVersion=0.1.0 installer\atom-neo.iss
+;   go build -ldflags "-s -w -X Atom3/src/misc.Version=v3.0.0" -o installer\atom.exe .\src
+;   "C:\Program Files\Inno Setup 7\ISCC.exe" /DAppVersion=3.0.0 installer\atom-neo.iss
 ;
 ; The version comes in from the command line so a tag and the installer cannot
 ; drift apart. Without it the build falls back to a dev version.
@@ -15,7 +15,7 @@
 ; The directory and the PATH entry stay unspaced, because a space in PATH
 ; breaks anything that splits it naively.
 #define AppDir "AtomNeo"
-; The language line, not this fork's release number.
+; Major and minor only, the way Python labels its Start Menu entry.
 #define LangVersion "3.0"
 #define ArchLabel "64-bit"
 #define AppPublisher "cfm-miku-en"
