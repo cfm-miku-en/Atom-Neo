@@ -288,7 +288,7 @@ func (p *parser) parsePrimary() (Expr, error) {
 		if p.peek().kind == tokLParen {
 			return p.parseCall(t.text)
 		}
-		return &varNode{name: t.text, slot: p.scope.Slot(t.text)}, nil
+		return &varNode{ref: p.scope.Resolve(t.text)}, nil
 	case tokLParen:
 		e, err := p.parseBinary(1)
 		if err != nil {

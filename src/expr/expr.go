@@ -23,16 +23,32 @@ const (
 	opIndex
 )
 
-// Scope holds the variables an expression can see. Globals live in numbered
-// slots rather than a map: names are resolved to an index while compiling, so
-// reading or writing one at run time is an array index instead of hashing a
-// string. Each function call pushes a frame, so parameters do not leak and
-// recursion keeps its own copies.
+// Ref says where a name lives. Working that out while compiling turns every
+// read and write at run time into an array index instead of hashing a string.
+type Ref struct {
+	Local bool
+	Index int
+	Name  string
+}
+
+// Scope holds the variables an expression can see.
+//
+// Globals sit in numbered slots and function locals sit in a shared stack, both
+// addressed by index. Calls used to build a map per invocation, which was the
+// overwhelming majority of everything the interpreter allocated.
 type Scope struct {
 	slots  []Value
 	filled []bool
 	ids    map[string]int
-	frames []map[string]Value
+
+	// Runtime frame storage; base is where the running call's locals start.
+	stack []Value
+	base  int
+
+	// Compile time only: the local table of the function being compiled, and
+	// the enclosing ones, since a func can be written inside another.
+	locals    map[string]int
+	enclosing []map[string]int
 }
 
 func NewScope() *Scope {
@@ -53,6 +69,81 @@ func (s *Scope) Slot(name string) int {
 	return id
 }
 
+// Define records a name being assigned: a local inside a function, a global at
+// the top level.
+func (s *Scope) Define(name string) Ref {
+	if s.locals == nil {
+		return Ref{Index: s.Slot(name), Name: name}
+	}
+
+	i, ok := s.locals[name]
+	if !ok {
+		i = len(s.locals)
+		s.locals[name] = i
+	}
+	return Ref{Local: true, Index: i, Name: name}
+}
+
+// Resolve records a name being read. A name that is not a local of the function
+// being compiled refers to a global.
+func (s *Scope) Resolve(name string) Ref {
+	if s.locals != nil {
+		if i, ok := s.locals[name]; ok {
+			return Ref{Local: true, Index: i, Name: name}
+		}
+	}
+	return Ref{Index: s.Slot(name), Name: name}
+}
+
+// BeginFunc opens a local table with the parameters already in it. EndFunc
+// closes it and reports how many stack entries a call to it needs.
+func (s *Scope) BeginFunc(params []string) {
+	s.enclosing = append(s.enclosing, s.locals)
+
+	s.locals = make(map[string]int, len(params)+4)
+	for i, p := range params {
+		s.locals[p] = i
+	}
+}
+
+func (s *Scope) EndFunc() int {
+	count := len(s.locals)
+
+	s.locals = s.enclosing[len(s.enclosing)-1]
+	s.enclosing = s.enclosing[:len(s.enclosing)-1]
+	return count
+}
+
+// PushFrame reserves room for a call's locals and returns the previous base for
+// PopFrame to restore. The stack is reused between calls, so once it has grown
+// enough this stops allocating.
+func (s *Scope) PushFrame(count int) int {
+	base := len(s.stack)
+	for i := 0; i < count; i++ {
+		s.stack = append(s.stack, Value{})
+	}
+
+	prev := s.base
+	s.base = base
+	return prev
+}
+
+func (s *Scope) PopFrame(prev int) {
+	s.stack = s.stack[:s.base]
+	s.base = prev
+}
+
+func (s *Scope) SetLocal(i int, v Value) { s.stack[s.base+i] = v }
+
+// Store writes through a ref, which is what an assignment compiles to.
+func (s *Scope) Store(ref Ref, v Value) {
+	if ref.Local {
+		s.stack[s.base+ref.Index] = v
+		return
+	}
+	s.SetSlot(ref.Index, v)
+}
+
 // Clear empties every value but keeps the name to slot mapping, so expressions
 // compiled earlier still point at the right places afterwards.
 func (s *Scope) Clear() {
@@ -60,25 +151,13 @@ func (s *Scope) Clear() {
 		s.slots[i] = Value{}
 		s.filled[i] = false
 	}
-	s.frames = nil
+	s.stack = s.stack[:0]
+	s.base = 0
 }
 
-func (s *Scope) Push(frame map[string]Value) {
-	s.frames = append(s.frames, frame)
-}
-
-func (s *Scope) Pop() {
-	s.frames = s.frames[:len(s.frames)-1]
-}
-
-// Lookup reports whether a name has a value, which is what separates an unset
-// global from one that genuinely holds zero.
+// Lookup finds a global by name. Locals are addressed by index and carry no
+// names at run time, so they are not reachable this way.
 func (s *Scope) Lookup(name string) (Value, bool) {
-	if n := len(s.frames); n > 0 {
-		if v, ok := s.frames[n-1][name]; ok {
-			return v, true
-		}
-	}
 	if id, ok := s.ids[name]; ok && s.filled[id] {
 		return s.slots[id], true
 	}
@@ -99,10 +178,6 @@ func (s *Scope) Get(name string) Value {
 }
 
 func (s *Scope) Set(name string, v Value) {
-	if n := len(s.frames); n > 0 {
-		s.frames[n-1][name] = v
-		return
-	}
 	s.SetGlobal(name, v)
 }
 
@@ -116,16 +191,6 @@ func (s *Scope) SetGlobal(name string, v Value) {
 func (s *Scope) SetSlot(id int, v Value) {
 	s.slots[id] = v
 	s.filled[id] = true
-}
-
-// SetVar writes to the innermost call frame when there is one and to the given
-// global slot otherwise, which is what a plain assignment does.
-func (s *Scope) SetVar(name string, slot int, v Value) {
-	if n := len(s.frames); n > 0 {
-		s.frames[n-1][name] = v
-		return
-	}
-	s.SetSlot(slot, v)
 }
 
 // Invoke is installed by the interpreter so expressions can call user-defined
@@ -145,12 +210,17 @@ func (n callNode) Eval(s *Scope) Value {
 		return Value{}
 	}
 
-	args := make([]Value, len(n.args))
-	for i, a := range n.args {
-		args[i] = a.Eval(s)
+	// Arguments are evaluated onto the shared stack and handed over as a view
+	// of it, so an ordinary call allocates nothing. Anything reached through
+	// Invoke must therefore copy what it wants to keep rather than holding on
+	// to the slice.
+	base := len(s.stack)
+	for _, a := range n.args {
+		s.stack = append(s.stack, a.Eval(s))
 	}
 
-	v, _ := Invoke(n.name, args)
+	v, _ := Invoke(n.name, s.stack[base:])
+	s.stack = s.stack[:base]
 	return v
 }
 
@@ -187,22 +257,19 @@ func (n mapNode) Eval(s *Scope) Value {
 	return NewMap(dict)
 }
 
-type varNode struct {
-	name string
-	slot int
-}
+type varNode struct{ ref Ref }
 
 func (n *varNode) Eval(s *Scope) Value {
-	// Only a function call creates a frame, so the common case skips this.
-	if fn := len(s.frames); fn > 0 {
-		if v, ok := s.frames[fn-1][n.name]; ok {
-			return v
-		}
+	if n.ref.Local {
+		return s.stack[s.base+n.ref.Index]
 	}
-	if n.slot < len(s.filled) && s.filled[n.slot] {
-		return s.slots[n.slot]
+	if s.filled[n.ref.Index] {
+		return s.slots[n.ref.Index]
 	}
-	return s.Get(n.name)
+	if IsFunc != nil && IsFunc(n.ref.Name) {
+		return FuncRef(n.ref.Name)
+	}
+	return Value{}
 }
 
 type unaryNode struct {

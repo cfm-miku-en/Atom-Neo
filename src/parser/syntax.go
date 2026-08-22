@@ -205,8 +205,15 @@ func (c *compiler) assignment(at int, line, keyword string, global bool) Node {
 		return nil
 	}
 
+	// global always targets the outer scope; a plain var becomes a local when
+	// it appears inside a function.
+	ref := scope.Define(name)
+	if global {
+		ref = expr.Ref{Index: scope.Slot(name), Name: name}
+	}
+
 	c.pos++
-	return &assignNode{name: name, slot: scope.Slot(name), val: val, global: global}
+	return &assignNode{ref: ref, val: val}
 }
 
 func (c *compiler) statement(line string) Node {
@@ -257,7 +264,10 @@ func (c *compiler) statement(line string) Node {
 			return nil
 		}
 		c.pos++
-		userFuncs[name] = &funcDef{params: params, body: c.block(true)}
+
+		scope.BeginFunc(params)
+		body := c.block(true)
+		userFuncs[name] = &funcDef{params: params, body: body, locals: scope.EndFunc()}
 		return nil
 
 	case "while":
@@ -297,7 +307,8 @@ func (c *compiler) statement(line string) Node {
 			return nil
 		}
 		c.pos++
-		return &eachNode{name: strings.TrimSpace(header[:sep]), list: list, body: c.block(true)}
+		ref := scope.Define(strings.TrimSpace(header[:sep]))
+		return &eachNode{ref: ref, list: list, body: c.block(true)}
 
 	case "if":
 		cond, err := conditionOf(line)

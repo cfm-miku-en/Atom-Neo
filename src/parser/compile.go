@@ -82,20 +82,11 @@ func loopSignal() bool {
 }
 
 type assignNode struct {
-	name   string
-	slot   int
-	val    expr.Expr
-	global bool
+	ref expr.Ref
+	val expr.Expr
 }
 
-func (n *assignNode) Exec() {
-	v := n.val.Eval(scope)
-	if n.global {
-		scope.SetSlot(n.slot, v)
-		return
-	}
-	scope.SetVar(n.name, n.slot, v)
-}
+func (n *assignNode) Exec() { scope.Store(n.ref, n.val.Eval(scope)) }
 
 type ifNode struct {
 	cond expr.Expr
@@ -141,7 +132,7 @@ func (n *repeatNode) Exec() {
 }
 
 type eachNode struct {
-	name string
+	ref  expr.Ref
 	list expr.Expr
 	body []Node
 }
@@ -160,7 +151,7 @@ func (n *eachNode) Exec() {
 	}
 
 	for _, item := range items {
-		scope.Set(n.name, item)
+		scope.Store(n.ref, item)
 		execAll(n.body)
 		if loopSignal() {
 			return
@@ -194,6 +185,10 @@ func (n *importNode) Exec() { ImportModule(n.name) }
 type funcDef struct {
 	params []string
 	body   []Node
+
+	// How many stack entries a call needs: the parameters plus anything the
+	// body assigns.
+	locals int
 }
 
 // Definitions are gathered while compiling, so a function can be called from a
@@ -221,14 +216,15 @@ func invoke(name string, args []expr.Value) (expr.Value, bool) {
 		return expr.Value{}, true
 	}
 
-	frame := make(map[string]expr.Value, len(fn.params))
-	for i, p := range fn.params {
-		frame[p] = args[i]
+	// Locals live in a reused stack rather than a fresh map, which is what made
+	// a call cost several allocations.
+	previous := scope.PushFrame(fn.locals)
+	for i, a := range args {
+		scope.SetLocal(i, a)
 	}
 
-	scope.Push(frame)
 	execAll(fn.body)
-	scope.Pop()
+	scope.PopFrame(previous)
 
 	result := returnValue
 	returnValue = expr.Value{}

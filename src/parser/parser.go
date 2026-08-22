@@ -35,6 +35,11 @@ func RunFile(filename string) {
 	execAll(CompileFile(filename, lines))
 }
 
+// Run executes an already compiled program.
+func Run(program []Node) {
+	execAll(program)
+}
+
 func RunSource(src string) {
 	execAll(Compile(strings.Split(src, "\n")))
 }
