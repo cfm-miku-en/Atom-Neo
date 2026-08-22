@@ -3,6 +3,7 @@ import web
 web.static("./site")
 web.notfound("404.html")
 web.route("/", "index.html")
+web.host("127.0.0.1")
 web.log(true)
 
 web.listen(9143)
