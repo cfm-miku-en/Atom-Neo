@@ -61,6 +61,7 @@ var mimeTypes = map[string]string{
 	".wasm":  "application/wasm",
 	".xml":   "application/xml",
 	".txt":   "text/plain; charset=utf-8",
+	".sh":    "text/plain; charset=utf-8",
 }
 
 func Register() {
