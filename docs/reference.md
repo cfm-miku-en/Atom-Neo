@@ -77,6 +77,9 @@ else {
 }
 ```
 
+`else` may also sit on the closing brace, as `} else {`, if that is the style you
+are used to. Both parse the same and the formatter leaves either alone.
+
 ### Loops
 
 ```
