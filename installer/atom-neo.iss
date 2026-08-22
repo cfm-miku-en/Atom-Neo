@@ -1,4 +1,4 @@
-; Inno Setup script for Atom-Neo.
+; Inno Setup script for Atom Neo.
 ;
 ; Build it with:
 ;   go build -ldflags "-s -w -X Atom3/src/misc.Version=v0.1.0" -o installer\atom.exe .\src
@@ -11,7 +11,13 @@
   #define AppVersion "0.0.0-dev"
 #endif
 
-#define AppName "Atom-Neo"
+#define AppName "Atom Neo"
+; The directory and the PATH entry stay unspaced, because a space in PATH
+; breaks anything that splits it naively.
+#define AppDir "AtomNeo"
+; The language line, not this fork's release number.
+#define LangVersion "3.0"
+#define ArchLabel "64-bit"
 #define AppPublisher "cfm-miku-en"
 #define AppURL "https://github.com/cfm-miku-en/Atom-Neo"
 #define AppExe "atom.exe"
@@ -29,7 +35,7 @@ AppUpdatesURL={#AppURL}/releases
 ; and no mode dialog to dismiss before the wizard appears. Offering the choice
 ; only leads somewhere that needs elevation we do not want.
 PrivilegesRequired=lowest
-DefaultDirName={localappdata}\{#AppName}
+DefaultDirName={localappdata}\{#AppDir}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 DisableDirPage=auto
@@ -65,12 +71,12 @@ Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; \
     ValueData: "{olddata};{app}\bin"; Tasks: addtopath; Check: NeedsAddPath(ExpandConstant('{app}\bin'))
 
 [Icons]
-Name: "{group}\{#AppName} repl"; Filename: "{app}\bin\{#AppExe}"; Parameters: "repl"
+Name: "{group}\Atom Terminal {#LangVersion} ({#ArchLabel})"; Filename: "{app}\bin\{#AppExe}"; Parameters: "repl"
 Name: "{group}\Documentation"; Filename: "{app}\docs\reference.md"
 Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{app}\bin\{#AppExe}"; Parameters: "repl"; Description: "Try the repl now"; \
+Filename: "{app}\bin\{#AppExe}"; Parameters: "repl"; Description: "Open Atom Terminal now"; \
     Flags: postinstall nowait skipifsilent unchecked
 
 [Code]
