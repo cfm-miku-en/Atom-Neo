@@ -44,7 +44,7 @@ func evalString(t *testing.T, src string) string {
 	if err != nil {
 		t.Fatalf("Compile(%q): %v", src, err)
 	}
-	return e.Eval(scope).Display()
+	return e(scope).Display()
 }
 
 func TestCompileAndEval(t *testing.T) {

@@ -86,7 +86,7 @@ type assignNode struct {
 	val expr.Expr
 }
 
-func (n *assignNode) Exec() { scope.Store(n.ref, n.val.Eval(scope)) }
+func (n *assignNode) Exec() { scope.Store(n.ref, n.val(scope)) }
 
 type ifNode struct {
 	cond expr.Expr
@@ -95,7 +95,7 @@ type ifNode struct {
 }
 
 func (n *ifNode) Exec() {
-	if truthy(n.cond.Eval(scope)) {
+	if truthy(n.cond(scope)) {
 		execAll(n.then)
 		return
 	}
@@ -108,7 +108,7 @@ type whileNode struct {
 }
 
 func (n *whileNode) Exec() {
-	for truthy(n.cond.Eval(scope)) {
+	for truthy(n.cond(scope)) {
 		execAll(n.body)
 		if loopSignal() {
 			return
@@ -122,7 +122,7 @@ type repeatNode struct {
 }
 
 func (n *repeatNode) Exec() {
-	count := int(n.count.Eval(scope).Num)
+	count := int(n.count(scope).Num)
 	for i := 0; i < count; i++ {
 		execAll(n.body)
 		if loopSignal() {
@@ -138,7 +138,7 @@ type eachNode struct {
 }
 
 func (n *eachNode) Exec() {
-	subject := n.list.Eval(scope)
+	subject := n.list(scope)
 
 	items := subject.Elems()
 	if subject.Kind == expr.Map {
@@ -163,7 +163,7 @@ type returnNode struct{ val expr.Expr }
 
 func (n *returnNode) Exec() {
 	if n.val != nil {
-		returnValue = n.val.Eval(scope)
+		returnValue = n.val(scope)
 	} else {
 		returnValue = expr.Value{}
 	}
@@ -240,7 +240,7 @@ type callNode struct {
 func (n *callNode) Exec() {
 	args := make([]expr.Value, len(n.args))
 	for i, a := range n.args {
-		args[i] = a.Eval(scope)
+		args[i] = a(scope)
 	}
 
 	if _, ok := invoke(n.name, args); ok {

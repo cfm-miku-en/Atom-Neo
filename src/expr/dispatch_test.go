@@ -88,6 +88,6 @@ func BenchmarkDispatchReal(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		e.Eval(s)
+		e(s)
 	}
 }

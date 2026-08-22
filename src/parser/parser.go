@@ -56,5 +56,5 @@ func Eval(src string) (string, bool) {
 	if err != nil {
 		return "", false
 	}
-	return e.Eval(scope).Display(), true
+	return e(scope).Display(), true
 }

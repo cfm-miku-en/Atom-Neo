@@ -183,7 +183,7 @@ func (p *parser) parseBinary(minPrec int) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		left = binaryNode{op: binaryOps[t.text], l: left, r: right}
+		left = binary(binaryOps[t.text], left, right)
 	}
 	return left, nil
 }
@@ -200,7 +200,7 @@ func (p *parser) parseUnary() (Expr, error) {
 		if t.text == "-" {
 			o = opNeg
 		}
-		return unaryNode{op: o, x: x}, nil
+		return unary(o, x), nil
 	}
 	return p.parsePrimary()
 }
@@ -242,7 +242,7 @@ func (p *parser) parseMapEntries(closing bool) (Expr, error) {
 	if closing && p.next().kind != tokRBracket {
 		return nil, fmt.Errorf("missing closing bracket in map")
 	}
-	return mapNode{pairs: pairs}, nil
+	return dict(pairs), nil
 }
 
 func (p *parser) parseCall(name string) (Expr, error) {
@@ -267,7 +267,7 @@ func (p *parser) parseCall(name string) (Expr, error) {
 	if p.next().kind != tokRParen {
 		return nil, fmt.Errorf("missing closing parenthesis in call to %s", name)
 	}
-	return callNode{name: name, args: args}, nil
+	return call(name, args), nil
 }
 
 func (p *parser) parsePrimary() (Expr, error) {
@@ -275,20 +275,20 @@ func (p *parser) parsePrimary() (Expr, error) {
 
 	switch t.kind {
 	case tokNum:
-		return literalNode{v: Num(t.num)}, nil
+		return literal(Num(t.num)), nil
 	case tokStr:
-		return literalNode{v: Str(t.text)}, nil
+		return literal(Str(t.text)), nil
 	case tokIdent:
 		switch t.text {
 		case "true":
-			return literalNode{v: Boolean(true)}, nil
+			return literal(Boolean(true)), nil
 		case "false":
-			return literalNode{v: Boolean(false)}, nil
+			return literal(Boolean(false)), nil
 		}
 		if p.peek().kind == tokLParen {
 			return p.parseCall(t.text)
 		}
-		return &varNode{ref: p.scope.Resolve(t.text)}, nil
+		return variable(p.scope.Resolve(t.text)), nil
 	case tokLParen:
 		e, err := p.parseBinary(1)
 		if err != nil {
@@ -303,7 +303,7 @@ func (p *parser) parsePrimary() (Expr, error) {
 		if p.peek().kind == tokColon && p.pos+1 < len(p.toks) && p.toks[p.pos+1].kind == tokRBracket {
 			p.next()
 			p.next()
-			return mapNode{}, nil
+			return dict(nil), nil
 		}
 		if p.mapAhead() {
 			return p.parseMapEntries(true)
@@ -327,7 +327,7 @@ func (p *parser) parsePrimary() (Expr, error) {
 		if p.next().kind != tokRBracket {
 			return nil, fmt.Errorf("missing closing bracket")
 		}
-		return listNode{items: items}, nil
+		return list(items), nil
 	}
 	return nil, fmt.Errorf("unexpected token in expression")
 }
@@ -342,7 +342,7 @@ func Compile(src string, scope *Scope) (Expr, error) {
 
 	// [:] is an empty map; the brackets are gone by now so only the colon is left.
 	if p.peek().kind == tokColon && p.toks[p.pos+1].kind == tokEOF {
-		return mapNode{}, nil
+		return dict(nil), nil
 	}
 
 	// The outer brackets are stripped before this point, so a map literal
@@ -374,7 +374,7 @@ func Compile(src string, scope *Scope) (Expr, error) {
 			}
 			items = append(items, next)
 		}
-		e = listNode{items: items}
+		e = list(items)
 	}
 
 	if p.peek().kind != tokEOF {

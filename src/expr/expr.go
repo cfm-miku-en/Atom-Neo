@@ -200,46 +200,45 @@ var Invoke func(name string, args []Value) (Value, bool)
 // IsFunc reports whether a name refers to a user-defined function.
 var IsFunc func(name string) bool
 
-type callNode struct {
-	name string
-	args []Expr
+// Expr is a compiled expression.
+//
+// It is a function rather than an interface because Go dispatches a closure
+// several times faster than an interface method, and because building one
+// per operator lets the operator be chosen while compiling instead of being
+// switched on during every visit.
+type Expr func(s *Scope) Value
+
+func literal(v Value) Expr {
+	return func(*Scope) Value { return v }
 }
 
-func (n callNode) Eval(s *Scope) Value {
-	if Invoke == nil {
+func variable(ref Ref) Expr {
+	if ref.Local {
+		return func(s *Scope) Value { return s.stack[s.base+ref.Index] }
+	}
+
+	return func(s *Scope) Value {
+		if s.filled[ref.Index] {
+			return s.slots[ref.Index]
+		}
+
+		// A bare name that is not a variable may still be a function, which is
+		// how a handler gets passed to something like web.handle.
+		if IsFunc != nil && IsFunc(ref.Name) {
+			return FuncRef(ref.Name)
+		}
 		return Value{}
 	}
-
-	// Arguments are evaluated onto the shared stack and handed over as a view
-	// of it, so an ordinary call allocates nothing. Anything reached through
-	// Invoke must therefore copy what it wants to keep rather than holding on
-	// to the slice.
-	base := len(s.stack)
-	for _, a := range n.args {
-		s.stack = append(s.stack, a.Eval(s))
-	}
-
-	v, _ := Invoke(n.name, s.stack[base:])
-	s.stack = s.stack[:base]
-	return v
 }
 
-type Expr interface {
-	Eval(s *Scope) Value
-}
-
-type literalNode struct{ v Value }
-
-func (n literalNode) Eval(*Scope) Value { return n.v }
-
-type listNode struct{ items []Expr }
-
-func (n listNode) Eval(s *Scope) Value {
-	vals := make([]Value, len(n.items))
-	for i, e := range n.items {
-		vals[i] = e.Eval(s)
+func list(items []Expr) Expr {
+	return func(s *Scope) Value {
+		vals := make([]Value, len(items))
+		for i, item := range items {
+			vals[i] = item(s)
+		}
+		return NewList(vals)
 	}
-	return NewList(vals)
 }
 
 type mapPair struct {
@@ -247,47 +246,42 @@ type mapPair struct {
 	val Expr
 }
 
-type mapNode struct{ pairs []mapPair }
-
-func (n mapNode) Eval(s *Scope) Value {
-	dict := make(map[string]Value, len(n.pairs))
-	for _, p := range n.pairs {
-		dict[p.key] = p.val.Eval(s)
+func dict(pairs []mapPair) Expr {
+	return func(s *Scope) Value {
+		d := make(map[string]Value, len(pairs))
+		for _, p := range pairs {
+			d[p.key] = p.val(s)
+		}
+		return NewMap(d)
 	}
-	return NewMap(dict)
 }
 
-type varNode struct{ ref Ref }
+func call(name string, args []Expr) Expr {
+	return func(s *Scope) Value {
+		if Invoke == nil {
+			return Value{}
+		}
 
-func (n *varNode) Eval(s *Scope) Value {
-	if n.ref.Local {
-		return s.stack[s.base+n.ref.Index]
+		// Arguments are evaluated onto the shared stack and handed over as a
+		// view of it, so an ordinary call allocates nothing. Anything reached
+		// through Invoke must copy what it wants to keep rather than holding
+		// on to the slice.
+		base := len(s.stack)
+		for _, a := range args {
+			s.stack = append(s.stack, a(s))
+		}
+
+		v, _ := Invoke(name, s.stack[base:])
+		s.stack = s.stack[:base]
+		return v
 	}
-	if s.filled[n.ref.Index] {
-		return s.slots[n.ref.Index]
-	}
-	if IsFunc != nil && IsFunc(n.ref.Name) {
-		return FuncRef(n.ref.Name)
-	}
-	return Value{}
 }
 
-type unaryNode struct {
-	op op
-	x  Expr
-}
-
-func (n unaryNode) Eval(s *Scope) Value {
-	v := n.x.Eval(s)
-	if n.op == opNeg {
-		return Num(-v.Num)
+func unary(o op, x Expr) Expr {
+	if o == opNeg {
+		return func(s *Scope) Value { return Num(-x(s).Num) }
 	}
-	return Boolean(!v.Truthy())
-}
-
-type binaryNode struct {
-	op   op
-	l, r Expr
+	return func(s *Scope) Value { return Boolean(!x(s).Truthy()) }
 }
 
 func equal(l, r Value) bool {
@@ -296,10 +290,12 @@ func equal(l, r Value) bool {
 	if l.Kind == Number && r.Kind == Number {
 		return l.Num == r.Num
 	}
+
 	if l.Kind == Map || r.Kind == Map {
 		if l.Kind != r.Kind {
 			return false
 		}
+
 		a, b := l.Dict(), r.Dict()
 		if len(a) != len(b) {
 			return false
@@ -312,6 +308,7 @@ func equal(l, r Value) bool {
 		}
 		return true
 	}
+
 	if l.Kind == List || r.Kind == List {
 		a, b := l.Elems(), r.Elems()
 		if l.Kind != r.Kind || len(a) != len(b) {
@@ -324,72 +321,86 @@ func equal(l, r Value) bool {
 		}
 		return true
 	}
+
 	if l.Kind == Text || r.Kind == Text {
 		return l.Display() == r.Display()
 	}
 	return l.Num == r.Num
 }
 
-func (n binaryNode) Eval(s *Scope) Value {
-	switch n.op {
+// join handles the cases of + that are not two numbers.
+func join(a, b Value) Value {
+	if a.Kind == List && b.Kind == List {
+		return NewList(append(append([]Value{}, a.Elems()...), b.Elems()...))
+	}
+	if a.Kind == Text || b.Kind == Text {
+		return Str(a.Display() + b.Display())
+	}
+	return Num(a.Num + b.Num)
+}
+
+func element(container, key Value) Value {
+	if container.Kind == Map {
+		return container.Dict()[key.Display()]
+	}
+
+	items := container.Elems()
+	i := int(key.Num)
+	if i < 0 || i >= len(items) {
+		return Value{}
+	}
+	return items[i]
+}
+
+// binary picks the operation once, while compiling. Evaluating one is then a
+// closure call rather than a switch taken on every visit.
+func binary(o op, l, r Expr) Expr {
+	switch o {
 	case opAnd:
-		if !n.l.Eval(s).Truthy() {
-			return Boolean(false)
+		return func(s *Scope) Value {
+			if !l(s).Truthy() {
+				return Boolean(false)
+			}
+			return Boolean(r(s).Truthy())
 		}
-		return Boolean(n.r.Eval(s).Truthy())
 	case opOr:
-		if n.l.Eval(s).Truthy() {
-			return Boolean(true)
+		return func(s *Scope) Value {
+			if l(s).Truthy() {
+				return Boolean(true)
+			}
+			return Boolean(r(s).Truthy())
 		}
-		return Boolean(n.r.Eval(s).Truthy())
-	}
-
-	l := n.l.Eval(s)
-	r := n.r.Eval(s)
-
-	switch n.op {
-	case opIndex:
-		if l.Kind == Map {
-			return l.Dict()[r.Display()]
-		}
-		items := l.Elems()
-		i := int(r.Num)
-		if i < 0 || i >= len(items) {
-			return Value{}
-		}
-		return items[i]
 	case opAdd:
-		if l.Kind == Number && r.Kind == Number {
-			return Num(l.Num + r.Num)
+		return func(s *Scope) Value {
+			a, b := l(s), r(s)
+			if a.Kind == Number && b.Kind == Number {
+				return Num(a.Num + b.Num)
+			}
+			return join(a, b)
 		}
-		if l.Kind == List && r.Kind == List {
-			joined := append(append([]Value{}, l.Elems()...), r.Elems()...)
-			return NewList(joined)
-		}
-		if l.Kind == Text || r.Kind == Text {
-			return Str(l.Display() + r.Display())
-		}
-		return Num(l.Num + r.Num)
 	case opSub:
-		return Num(l.Num - r.Num)
+		return func(s *Scope) Value { return Num(l(s).Num - r(s).Num) }
 	case opMul:
-		return Num(l.Num * r.Num)
+		return func(s *Scope) Value { return Num(l(s).Num * r(s).Num) }
 	case opDiv:
-		return Num(l.Num / r.Num)
+		return func(s *Scope) Value { return Num(l(s).Num / r(s).Num) }
 	case opMod:
-		return Num(math.Mod(l.Num, r.Num))
+		return func(s *Scope) Value { return Num(math.Mod(l(s).Num, r(s).Num)) }
 	case opEq:
-		return Boolean(equal(l, r))
+		return func(s *Scope) Value { return Boolean(equal(l(s), r(s))) }
 	case opNe:
-		return Boolean(!equal(l, r))
+		return func(s *Scope) Value { return Boolean(!equal(l(s), r(s))) }
 	case opLt:
-		return Boolean(l.Num < r.Num)
+		return func(s *Scope) Value { return Boolean(l(s).Num < r(s).Num) }
 	case opGt:
-		return Boolean(l.Num > r.Num)
+		return func(s *Scope) Value { return Boolean(l(s).Num > r(s).Num) }
 	case opLe:
-		return Boolean(l.Num <= r.Num)
+		return func(s *Scope) Value { return Boolean(l(s).Num <= r(s).Num) }
 	case opGe:
-		return Boolean(l.Num >= r.Num)
+		return func(s *Scope) Value { return Boolean(l(s).Num >= r(s).Num) }
+	case opIndex:
+		return func(s *Scope) Value { return element(l(s), r(s)) }
 	}
-	return Value{}
+
+	return func(*Scope) Value { return Value{} }
 }
