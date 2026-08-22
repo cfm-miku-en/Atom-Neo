@@ -9,6 +9,7 @@ Back to the [README](../README.md). See also [making a package](packages.md).
 - [The web module](#the-web-module)
 - [The proxy](#the-proxy)
 - [Speed](#speed)
+- [Security](#security)
 - [Building](#building)
 
 ---
@@ -338,6 +339,63 @@ branch         100.2M/s      14.7M/s      6.81x
 ```
 
 Your numbers will differ. Run it yourself rather than trusting these.
+
+---
+
+## Security
+
+Atom runs whatever it is given, so the split below is worth knowing before a
+script of someone else's is pointed at the internet.
+
+### What the runtime stops
+
+| | |
+|---|---|
+| Runaway recursion | capped, so a missing base case reports an error instead of killing the process |
+| Oversized packages | extraction stops at 256MB, checking the declared size and the real bytes |
+| Archive paths | an entry that climbs out of the install directory is refused |
+| Request paths | `/../` and its encoded forms cannot reach outside the static folder |
+| Directory listings | off, so a folder without an index is not browsable |
+| Slow clients | read, write and idle timeouts are set on every server |
+| Request bodies | capped at 10MB |
+| `X-Forwarded-For` | the proxy drops what the client claimed before adding the real address |
+
+### What it does not
+
+**A loop that never ends hangs the server.** Handlers run one at a time, so a
+handler that never returns holds the interpreter and every later request waits
+behind it. There is no timeout on a handler and no way to interrupt one.
+
+**Scripts can reach the whole filesystem.** `read`, `write` and `remove` take
+any path. A handler like `read(web.query("f"))` is an invitation to read
+anything the process can. Never build a path out of something from a request.
+
+**Handlers share globals.** A handler writing to a global is writing to the same
+global every visitor sees, so anything kept there leaks between requests. Keep
+per-request data in local variables.
+
+**Installing a package runs its code.** `import` executes the package, so
+installing one is trusting whoever wrote it, the same way npm or pip works.
+Nothing is sandboxed.
+
+### Writing a handler
+
+Everything that came from the request is attacker-controlled. Put it through
+`escape` before it reaches a page:
+
+```
+func greet(path) {
+	var who = [escape(web.query("who"))]
+	return ["<h1>hello " + who + "</h1>"]
+}
+```
+
+Without `escape` a visitor supplies a script tag instead of a name and it runs
+for whoever loads the page.
+
+For anything public, bind the server to localhost with `web.host("127.0.0.1")`
+and put a proxy in front, so TLS and the open port are handled somewhere that
+has been hardened for it.
 
 ---
 
