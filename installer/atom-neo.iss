@@ -25,9 +25,10 @@ AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}/issues
 AppUpdatesURL={#AppURL}/releases
 
-; Installs for one user into their profile, so no administrator prompt.
+; Installs for one user into their profile, so there is no administrator prompt
+; and no mode dialog to dismiss before the wizard appears. Offering the choice
+; only leads somewhere that needs elevation we do not want.
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
 DefaultDirName={localappdata}\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
