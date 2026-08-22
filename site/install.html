@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installing Atom Neo</title>
+<meta name="description" content="Install Atom Neo on Windows with the installer, or on Linux with a script that checks the published checksum before it puts anything on disk.">
+<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1916" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://atom.mikuuu.xyz/install">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Atom Neo">
+<meta property="og:title" content="Installing Atom Neo">
+<meta property="og:description" content="Install Atom Neo on Windows with the installer, or on Linux with a script that checks the published checksum before it puts anything on disk.">
+<meta property="og:url" content="https://atom.mikuuu.xyz/install">
+<meta property="og:image" content="https://atom.mikuuu.xyz/assets/card.png">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
+<script>
+  (function () {
+    var saved = localStorage.getItem("theme");
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+  })();
+</script>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="mark"><a href="/">Atom <b>Neo</b></a></div>
+    <nav>
+      <a href="/install" aria-current="page">Install</a>
+      <a href="/quark">Quark</a>
+      <a href="https://github.com/cfm-miku-en/Atom-Neo">Source</a>
+      <button class="theme" type="button" aria-label="Switch between light and dark">
+        <svg class="sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.4"/><path d="M12 2.4v2.6M12 19v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.4 12h2.6M19 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9"/></svg>
+        <svg class="moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.8A8.6 8.6 0 0 1 9.2 3.5a8.6 8.6 0 1 0 11.3 11.3z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <hr class="rule">
+
+  <div class="open">
+    <h1>Getting it <i>on your machine</i>.</h1>
+    <p class="lede">Two supported systems and three ways in. Whichever you pick, what lands on disk is one binary with everything already inside it.</p>
+  </div>
+  <hr class="rule">
+
+  <div class="cols">
+    <div>
+      <h2>Windows</h2>
+      <p class="body">The installer puts Atom Neo in your own local app data and adds a repl shortcut to the Start Menu. It installs for you alone, so Windows never asks for an administrator, and it removes cleanly from Add or Remove Programs.</p>
+      <a class="btn" href="https://github.com/cfm-miku-en/Atom-Neo/releases/latest">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5l7.5-1.05v7.2H3V5.5zM11.5 4.3L21 3v8.65h-9.5V4.3zM3 12.65h7.5v7.2L3 18.5v-5.85zM11.5 12.65H21V21l-9.5-1.35v-7z"/></svg>
+        Download the installer
+      </a>
+    </div>
+    <div>
+      <div class="label">A warning you should expect</div>
+      <p class="body">The installer is not code signed, so Windows will show a blue <b>"Windows protected your PC"</b> panel the first time you run it. That is SmartScreen reporting that it has not seen this file before, not a virus report, and it is easy to mistake for a crash because the installer appears to do nothing.</p>
+      <p class="body">Choose <b>More info</b>, then <b>Run anyway</b>. A signing certificate is the only real fix and it costs money the project does not have yet. If you would rather not, build from source instead.</p>
+    </div>
+  </div>
+  <hr class="rule">
+
+  <div class="cols">
+    <div>
+      <h2>Linux</h2>
+      <p class="body">The script works out your architecture, downloads the matching release, checks it against the published <code>SHA256SUMS.txt</code> and refuses to continue if the hashes disagree. It needs <code>curl</code>, <code>tar</code> and <code>sha256sum</code>, which you almost certainly already have.</p>
+      <p class="body">x86-64 and arm64 both have builds. It installs into your home directory, so there is no <code>sudo</code> anywhere in it.</p>
+      <p class="body"><a href="/install.sh">Read the script first</a>, which is a good habit with anything piped into a shell.</p>
+    </div>
+    <div>
+      <div class="label">Linux</div>
+      <div class="shell"><span class="sigil">$ </span>curl -fsSL atom.mikuuu.xyz/install.sh | sh</div>
+      <div class="label" style="margin-top:26px">Override any of these</div>
+      <table>
+        <tbody>
+          <tr><td><code>ATOM_VERSION</code></td><td>pin a release</td></tr>
+          <tr><td><code>ATOM_INSTALL_DIR</code></td><td>where the files go</td></tr>
+          <tr><td><code>ATOM_BIN_DIR</code></td><td>where <code>atom</code> goes</td></tr>
+        </tbody>
+      </table>
+      <div class="after">Defaults are <code>~/.local/share/atom-neo</code> and <code>~/.local/bin</code>. If the latter is not on your <code>PATH</code>, the script says so before it finishes.</div>
+    </div>
+  </div>
+  <hr class="rule">
+
+  <div class="cols">
+    <div>
+      <h2>From source</h2>
+      <p class="body">Go 1.26.5 or newer, and nothing else. There are no code generation steps, no vendored C and no build tags to remember, because the language depends on no third party code at all.</p>
+      <p class="body">macOS has no published build. Nothing in the language is Windows or Linux specific, so this is the way in on a Mac, but it is untested and unsupported.</p>
+    </div>
+    <div>
+<pre>git clone https://github.com/cfm-miku-en/Atom-Neo
+<span class="kw">cd</span> Atom-Neo
+
+go build -o atom ./src
+
+./atom repl</pre>
+    </div>
+  </div>
+  <hr class="rule">
+
+  <div class="cols">
+    <div>
+      <h2>Then what.</h2>
+      <p class="body">Run <code>atom repl</code> and type a statement. Nothing needs to exist on disk first, and state carries between lines, so it is the quickest way to find out whether you like the language.</p>
+      <p class="body"><a href="https://github.com/cfm-miku-en/Atom-Neo/blob/main/docs/reference.md">The reference</a> covers every builtin, the commands, the web module and the proxy.</p>
+    </div>
+    <div>
+<pre>$ atom repl
+
+<span class="cm">&gt; var xs = [1, 2, 3]</span>
+<span class="cm">&gt; print([len(xs) * 2])</span>
+6</pre>
+    </div>
+  </div>
+  <hr class="rule">
+
+  <div class="colophon">
+    <span>A fork of <a href="https://github.com/WawaDevX/Atom3">Atom3</a> by WawaDev.</span>
+    <span>v0.1.0, Quark</span>
+  </div>
+
+</div>
+
+<script>
+  document.querySelector(".theme").addEventListener("click", function () {
+    var root = document.documentElement;
+    var dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    var now = root.getAttribute("data-theme") || (dark ? "dark" : "light");
+    var next = now === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    localStorage.setItem("theme", next);
+  });
+</script>
+</body>
+</html>
