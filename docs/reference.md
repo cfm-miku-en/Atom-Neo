@@ -328,9 +328,9 @@ One run against CPython 3.14.6:
 ```
 benchmark          atom       python      ratio
 -----------------------------------------------
-loop            90.6M/s      19.5M/s      4.64x
-arith           50.0M/s       9.6M/s      5.20x
-branch          50.0M/s      14.6M/s      3.42x
+loop           100.1M/s      19.9M/s      5.04x
+arith           50.0M/s       9.1M/s      5.52x
+branch          50.0M/s      14.9M/s      3.37x
 ```
 
 Your numbers will differ. Run it yourself rather than trusting these.
