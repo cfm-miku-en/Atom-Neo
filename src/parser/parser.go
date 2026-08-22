@@ -47,7 +47,7 @@ func Eval(src string) (string, bool) {
 		return "", false
 	}
 
-	e, err := expr.Compile(src[1 : len(src)-1])
+	e, err := expr.Compile(src[1:len(src)-1], scope)
 	if err != nil {
 		return "", false
 	}

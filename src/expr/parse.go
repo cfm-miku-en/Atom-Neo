@@ -149,8 +149,9 @@ var binaryOps = map[string]op{
 }
 
 type parser struct {
-	toks []token
-	pos  int
+	toks  []token
+	pos   int
+	scope *Scope
 }
 
 func (p *parser) peek() token { return p.toks[p.pos] }
@@ -287,7 +288,7 @@ func (p *parser) parsePrimary() (Expr, error) {
 		if p.peek().kind == tokLParen {
 			return p.parseCall(t.text)
 		}
-		return varNode{name: t.text}, nil
+		return &varNode{name: t.text, slot: p.scope.Slot(t.text)}, nil
 	case tokLParen:
 		e, err := p.parseBinary(1)
 		if err != nil {
@@ -331,13 +332,13 @@ func (p *parser) parsePrimary() (Expr, error) {
 	return nil, fmt.Errorf("unexpected token in expression")
 }
 
-func Compile(src string) (Expr, error) {
+func Compile(src string, scope *Scope) (Expr, error) {
 	toks, err := lex(src)
 	if err != nil {
 		return nil, err
 	}
 
-	p := &parser{toks: toks}
+	p := &parser{toks: toks, scope: scope}
 
 	// [:] is an empty map; the brackets are gone by now so only the colon is left.
 	if p.peek().kind == tokColon && p.toks[p.pos+1].kind == tokEOF {

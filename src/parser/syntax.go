@@ -84,17 +84,17 @@ func conditionOf(line string) (expr.Expr, error) {
 	if start < 0 || end <= start {
 		return nil, fmt.Errorf("missing a [condition]")
 	}
-	return expr.Compile(line[start+1 : end])
+	return expr.Compile(line[start+1:end], scope)
 }
 
 func compileValue(tok string) (expr.Expr, error) {
 	if strings.HasPrefix(tok, "[") && strings.HasSuffix(tok, "]") {
 		if inner := tok[1 : len(tok)-1]; strings.TrimSpace(inner) != "" {
-			return expr.Compile(inner)
+			return expr.Compile(inner, scope)
 		}
-		return expr.Compile("[]")
+		return expr.Compile("[]", scope)
 	}
-	return expr.Compile(tok)
+	return expr.Compile(tok, scope)
 }
 
 func parseFuncHeader(line string) (string, []string, bool) {
@@ -206,7 +206,7 @@ func (c *compiler) assignment(at int, line, keyword string, global bool) Node {
 	}
 
 	c.pos++
-	return &assignNode{name: name, val: val, global: global}
+	return &assignNode{name: name, slot: scope.Slot(name), val: val, global: global}
 }
 
 func (c *compiler) statement(line string) Node {

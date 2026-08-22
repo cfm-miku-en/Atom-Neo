@@ -16,7 +16,7 @@ func errorf(format string, args ...any) {
 }
 
 func ResolveValue(arg string) string {
-	if v, ok := scope.Vars[arg]; ok {
+	if v, ok := scope.Lookup(arg); ok {
 		return v.Display()
 	}
 	return strings.Trim(arg, `"`)

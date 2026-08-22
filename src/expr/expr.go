@@ -23,16 +23,44 @@ const (
 	opIndex
 )
 
-// Scope holds the variables an expression can see. Globals live in Vars; each
-// function call pushes a frame, so parameters no longer leak and recursion
-// keeps its own copies.
+// Scope holds the variables an expression can see. Globals live in numbered
+// slots rather than a map: names are resolved to an index while compiling, so
+// reading or writing one at run time is an array index instead of hashing a
+// string. Each function call pushes a frame, so parameters do not leak and
+// recursion keeps its own copies.
 type Scope struct {
-	Vars   map[string]Value
+	slots  []Value
+	filled []bool
+	ids    map[string]int
 	frames []map[string]Value
 }
 
 func NewScope() *Scope {
-	return &Scope{Vars: make(map[string]Value)}
+	return &Scope{ids: make(map[string]int)}
+}
+
+// Slot resolves a global name to its index, giving out a new one if the name is
+// new. Call it while compiling, not while running.
+func (s *Scope) Slot(name string) int {
+	if id, ok := s.ids[name]; ok {
+		return id
+	}
+
+	id := len(s.slots)
+	s.ids[name] = id
+	s.slots = append(s.slots, Value{})
+	s.filled = append(s.filled, false)
+	return id
+}
+
+// Clear empties every value but keeps the name to slot mapping, so expressions
+// compiled earlier still point at the right places afterwards.
+func (s *Scope) Clear() {
+	for i := range s.slots {
+		s.slots[i] = Value{}
+		s.filled[i] = false
+	}
+	s.frames = nil
 }
 
 func (s *Scope) Push(frame map[string]Value) {
@@ -43,13 +71,22 @@ func (s *Scope) Pop() {
 	s.frames = s.frames[:len(s.frames)-1]
 }
 
-func (s *Scope) Get(name string) Value {
+// Lookup reports whether a name has a value, which is what separates an unset
+// global from one that genuinely holds zero.
+func (s *Scope) Lookup(name string) (Value, bool) {
 	if n := len(s.frames); n > 0 {
 		if v, ok := s.frames[n-1][name]; ok {
-			return v
+			return v, true
 		}
 	}
-	if v, ok := s.Vars[name]; ok {
+	if id, ok := s.ids[name]; ok && s.filled[id] {
+		return s.slots[id], true
+	}
+	return Value{}, false
+}
+
+func (s *Scope) Get(name string) Value {
+	if v, ok := s.Lookup(name); ok {
 		return v
 	}
 
@@ -61,18 +98,34 @@ func (s *Scope) Get(name string) Value {
 	return Value{}
 }
 
-// SetGlobal writes past any active call frame, which is what the global
-// keyword compiles to.
-func (s *Scope) SetGlobal(name string, v Value) {
-	s.Vars[name] = v
-}
-
 func (s *Scope) Set(name string, v Value) {
 	if n := len(s.frames); n > 0 {
 		s.frames[n-1][name] = v
 		return
 	}
-	s.Vars[name] = v
+	s.SetGlobal(name, v)
+}
+
+// SetGlobal writes past any active call frame, which is what the global
+// keyword compiles to.
+func (s *Scope) SetGlobal(name string, v Value) {
+	s.SetSlot(s.Slot(name), v)
+}
+
+// SetSlot writes straight to a global slot, ignoring any call frame.
+func (s *Scope) SetSlot(id int, v Value) {
+	s.slots[id] = v
+	s.filled[id] = true
+}
+
+// SetVar writes to the innermost call frame when there is one and to the given
+// global slot otherwise, which is what a plain assignment does.
+func (s *Scope) SetVar(name string, slot int, v Value) {
+	if n := len(s.frames); n > 0 {
+		s.frames[n-1][name] = v
+		return
+	}
+	s.SetSlot(slot, v)
 }
 
 // Invoke is installed by the interpreter so expressions can call user-defined
@@ -134,9 +187,23 @@ func (n mapNode) Eval(s *Scope) Value {
 	return NewMap(dict)
 }
 
-type varNode struct{ name string }
+type varNode struct {
+	name string
+	slot int
+}
 
-func (n varNode) Eval(s *Scope) Value { return s.Get(n.name) }
+func (n *varNode) Eval(s *Scope) Value {
+	// Only a function call creates a frame, so the common case skips this.
+	if fn := len(s.frames); fn > 0 {
+		if v, ok := s.frames[fn-1][n.name]; ok {
+			return v
+		}
+	}
+	if n.slot < len(s.filled) && s.filled[n.slot] {
+		return s.slots[n.slot]
+	}
+	return s.Get(n.name)
+}
 
 type unaryNode struct {
 	op op

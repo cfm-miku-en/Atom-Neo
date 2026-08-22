@@ -38,11 +38,13 @@ func TestUnescape(t *testing.T) {
 func evalString(t *testing.T, src string) string {
 	t.Helper()
 
-	e, err := Compile(src)
+	scope := NewScope()
+
+	e, err := Compile(src, scope)
 	if err != nil {
 		t.Fatalf("Compile(%q): %v", src, err)
 	}
-	return e.Eval(NewScope()).Display()
+	return e.Eval(scope).Display()
 }
 
 func TestCompileAndEval(t *testing.T) {
@@ -90,7 +92,7 @@ func TestCompileRejectsBadInput(t *testing.T) {
 	}
 
 	for _, src := range bad {
-		if _, err := Compile(src); err == nil {
+		if _, err := Compile(src, NewScope()); err == nil {
 			t.Errorf("Compile(%q) should have failed", src)
 		}
 	}

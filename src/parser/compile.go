@@ -83,6 +83,7 @@ func loopSignal() bool {
 
 type assignNode struct {
 	name   string
+	slot   int
 	val    expr.Expr
 	global bool
 }
@@ -90,10 +91,10 @@ type assignNode struct {
 func (n *assignNode) Exec() {
 	v := n.val.Eval(scope)
 	if n.global {
-		scope.SetGlobal(n.name, v)
+		scope.SetSlot(n.slot, v)
 		return
 	}
-	scope.Set(n.name, v)
+	scope.SetVar(n.name, n.slot, v)
 }
 
 type ifNode struct {

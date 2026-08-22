@@ -10,9 +10,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: true
@@ -49,9 +49,9 @@ jobs:
           - goos: windows
             goarch: amd64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: true
@@ -63,4 +63,14 @@ jobs:
           CGO_ENABLED: 0
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-        run: go build -ldflags "-s -w" -o /tmp/atom ./src
+        run: |
+          name=atom
+          if [ "$GOOS" = "windows" ]; then name=atom.exe; fi
+          go build -ldflags "-s -w -X Atom3/src/misc.Version=ci-${GITHUB_SHA::7}" -o "out/$name" ./src
+
+      # Uploaded so any commit can be downloaded and tried without cutting a tag.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: atom-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: out/
+          retention-days: 14

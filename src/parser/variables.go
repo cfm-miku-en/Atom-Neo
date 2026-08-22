@@ -4,8 +4,10 @@ import "Atom3/src/expr"
 
 var scope = expr.NewScope()
 
+// Values are cleared but the name to slot mapping is kept, so anything compiled
+// against this scope still points at the right places.
 func ResetVariables() {
-	scope = expr.NewScope()
+	scope.Clear()
 }
 
 func SetVariable(name string, value expr.Value) {
@@ -13,14 +15,13 @@ func SetVariable(name string, value expr.Value) {
 }
 
 func GetVariable(name string) (expr.Value, bool) {
-	v, ok := scope.Vars[name]
-	return v, ok
+	return scope.Lookup(name)
 }
 
 // ResetAll clears every bit of interpreter state, so a test can run one program
 // without the previous one's variables or functions leaking into it.
 func ResetAll() {
-	scope = expr.NewScope()
+	scope.Clear()
 	userFuncs = make(map[string]*funcDef)
 	imported = make(map[string]bool)
 	flow = sigNone
