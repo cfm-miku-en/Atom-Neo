@@ -6,6 +6,7 @@
 ![engine](https://img.shields.io/badge/engine-Quark-7ee787)
 ![deps](https://img.shields.io/badge/language%20deps-0-blue)
 ![beginner](https://img.shields.io/badge/beginner-friendly-orange)
+![codebase](https://img.shields.io/badge/codebase-messy-blue)
 
 # Atom-Neo
 
