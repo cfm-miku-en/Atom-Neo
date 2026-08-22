@@ -20,3 +20,4 @@ dist/
 installer/atom.exe
 *.test.exe
 HANDOFF.md
+design/atom-neo-site.html
