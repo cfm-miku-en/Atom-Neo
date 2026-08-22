@@ -38,7 +38,7 @@ print([hi("world")])
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-Or build it: `go build -o atom ./src` (Go 1.26.5+).
+Or build it yourself: `go build -o atom ./src` (Go 1.26.5+).
 
 ## Speed
 

@@ -16,3 +16,5 @@ atom-linux-amd64
 atom-certs/
 atom.exe
 web.zip
+dist/
+installer/atom.exe
