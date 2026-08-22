@@ -41,7 +41,7 @@ administrator prompt, uninstalls from Add or Remove Programs.
 **Linux**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/cfm-miku-en/Atom-Neo/main/install.sh | sh
+curl -fsSL https://atom.mikuuu.xyz/install.sh | sh
 ```
 
 **From source.** `go build -o atom ./src`, with Go 1.26.5 or newer.
