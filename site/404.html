@@ -1,1 +1,80 @@
-<!doctype html><meta charset="utf-8"><title>Not found</title><h1>404 — nothing here</h1>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nothing at that address</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1916" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/style.css">
+<script>
+  (function () {
+    var saved = localStorage.getItem("theme");
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+  })();
+</script>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="mark"><a href="/">Atom <b>Neo</b></a></div>
+    <nav>
+      <a href="/install">Install</a>
+      <a href="/quark">Quark</a>
+      <a href="https://github.com/cfm-miku-en/Atom-Neo">Source</a>
+      <button class="theme" type="button" aria-label="Switch between light and dark">
+        <svg class="sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.4"/><path d="M12 2.4v2.6M12 19v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.4 12h2.6M19 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9"/></svg>
+        <svg class="moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.8A8.6 8.6 0 0 1 9.2 3.5a8.6 8.6 0 1 0 11.3 11.3z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <hr class="rule">
+
+  <div class="open">
+    <h1>There is <i>nothing</i> here.</h1>
+    <p class="lede">The address you asked for does not match a page. It may have moved, or it may never have existed.</p>
+  </div>
+  <hr class="rule">
+
+  <div class="cols">
+    <div>
+      <h2>Somewhere that does exist</h2>
+      <p class="body"><a href="/">The language</a>, what it ships with, and the code samples.</p>
+      <p class="body"><a href="/install">Installing it</a> on Windows or Linux, or building from source.</p>
+      <p class="body"><a href="/quark">Quark</a>, the engine underneath, and what was measured to get there.</p>
+    </div>
+    <div>
+<pre><span class="kw">func</span> notfound(path) {
+  <span class="kw">return</span> [<span class="st">"no page at "</span> + path]
+}
+
+web.handle(<span class="st">"/404"</span>, notfound)</pre>
+    </div>
+  </div>
+  <hr class="rule">
+
+  <div class="colophon">
+    <span>A fork of <a href="https://github.com/WawaDevX/Atom3">Atom3</a> by WawaDev.</span>
+    <span>v0.1.0, Quark</span>
+  </div>
+
+</div>
+
+<script>
+  document.querySelector(".theme").addEventListener("click", function () {
+    var root = document.documentElement;
+    var dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    var now = root.getAttribute("data-theme") || (dark ? "dark" : "light");
+    var next = now === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    localStorage.setItem("theme", next);
+  });
+</script>
+</body>
+</html>
