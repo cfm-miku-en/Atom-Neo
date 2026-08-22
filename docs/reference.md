@@ -359,6 +359,7 @@ script of someone else's is pointed at the internet.
 | Slow clients | read, write and idle timeouts are set on every server |
 | Request bodies | capped at 10MB |
 | `X-Forwarded-For` | the proxy drops what the client claimed before adding the real address |
+| Misspelled calls | a call to a function that does not exist reports it and stops the block, rather than quietly producing an empty value |
 
 ### What it does not
 
@@ -373,6 +374,11 @@ anything the process can. Never build a path out of something from a request.
 **Handlers share globals.** A handler writing to a global is writing to the same
 global every visitor sees, so anything kept there leaks between requests. Keep
 per-request data in local variables.
+
+**A failed handler answers 200.** When a handler stops early the error is
+logged and the connection still gets a success with an empty body. The server
+keeps serving and one bad request cannot affect the next, but the status code
+does not say anything went wrong.
 
 **Installing a package runs its code.** `import` executes the package, so
 installing one is trusting whoever wrote it, the same way npm or pip works.

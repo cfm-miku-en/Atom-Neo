@@ -196,6 +196,12 @@ var Invoke func(name string, args []Value) (Value, bool)
 // IsFunc reports whether a name refers to a user-defined function.
 var IsFunc func(name string) bool
 
+// Unknown is called when an expression tries to call something that does not
+// exist. The interpreter installs it; without one the call quietly produces an
+// empty value, which is how a misspelled name in a negated test used to let a
+// branch run.
+var Unknown func(name string)
+
 // Expr is a compiled expression.
 //
 // It is a function rather than an interface because Go dispatches a closure
@@ -267,8 +273,12 @@ func call(name string, args []Expr) Expr {
 			s.stack = append(s.stack, a(s))
 		}
 
-		v, _ := Invoke(name, s.stack[base:])
+		v, ok := Invoke(name, s.stack[base:])
 		s.stack = s.stack[:base]
+
+		if !ok && Unknown != nil {
+			Unknown(name)
+		}
 		return v
 	}
 }

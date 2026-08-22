@@ -10,7 +10,16 @@ import (
 func init() {
 	expr.Invoke = invoke
 	expr.IsFunc = isUserFunc
+	expr.Unknown = reportUnknown
 	builtins.Call = callFromNative
+}
+
+// reportUnknown stops the surrounding block as well as reporting. Returning an
+// empty value instead would leave a misspelled name looking like a real answer,
+// and a negated one would read as true.
+func reportUnknown(name string) {
+	errorf("[Runtime Error]: no function called '%s'\n", name)
+	flow = sigAbort
 }
 
 func isUserFunc(name string) bool {
@@ -33,6 +42,13 @@ func callFromNative(name string, args []string) (string, bool) {
 	}
 
 	v, ok := invoke(name, vals)
+
+	// One failed handler must not leave the interpreter refusing to run the
+	// next request, so the boundary is where a stop signal ends.
+	flow = sigNone
+	returnValue = expr.Value{}
+	callDepth = 0
+
 	return v.Display(), ok
 }
 
@@ -68,10 +84,13 @@ var returnValue expr.Value
 
 func execAll(nodes []Node) {
 	for _, n := range nodes {
-		n.Exec()
+		// Checked before running rather than after, so a block entered while
+		// something has already gone wrong does not get one statement in
+		// regardless.
 		if flow != sigNone {
 			return
 		}
+		n.Exec()
 	}
 }
 
