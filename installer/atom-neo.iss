@@ -48,8 +48,9 @@ WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64compatible
 
 LicenseFile=..\LICENSE
+SetupIconFile=atom.ico
 UninstallDisplayName={#AppName} {#AppVersion}
-UninstallDisplayIcon={app}\bin\{#AppExe}
+UninstallDisplayIcon={app}\bin\atom.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -59,6 +60,7 @@ Name: "addtopath"; Description: "Add atom to my PATH so I can run it from any te
 
 [Files]
 Source: "atom.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "atom.ico"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs
@@ -71,7 +73,7 @@ Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; \
     ValueData: "{olddata};{app}\bin"; Tasks: addtopath; Check: NeedsAddPath(ExpandConstant('{app}\bin'))
 
 [Icons]
-Name: "{group}\Atom Terminal {#LangVersion} ({#ArchLabel})"; Filename: "{app}\bin\{#AppExe}"; Parameters: "repl"
+Name: "{group}\Atom Terminal {#LangVersion} ({#ArchLabel})"; Filename: "{app}\bin\{#AppExe}"; Parameters: "repl"; IconFilename: "{app}\bin\atom.ico"
 Name: "{group}\Documentation"; Filename: "{app}\docs\reference.md"
 Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
 
