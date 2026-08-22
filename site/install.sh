@@ -1,7 +1,7 @@
 #!/bin/sh
 # Installs the atom command on Linux.
 #
-#   curl -fsSL https://raw.githubusercontent.com/cfm-miku-en/Atom-Neo/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/cfm-miku-en/Atom-Neo/main/site/install.sh | sh
 #
 # Override with environment variables if you want to:
 #   ATOM_VERSION=v0.1.0            pin a release instead of taking the latest
