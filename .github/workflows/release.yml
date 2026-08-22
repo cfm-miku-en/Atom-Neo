@@ -1,0 +1,120 @@
+name: release
+
+# Tag a commit and push the tag to get a draft release with everything attached.
+# It is left as a draft on purpose, so the notes get written and the artifacts
+# get a look before anyone can download them.
+#
+#   git tag v0.1.0
+#   git push --tags
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build, e.g. v0.1.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: work out the version
+        id: version
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            tag="${{ github.event.inputs.version }}"
+          else
+            tag="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "bare=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: test
+        shell: bash
+        run: go test ./src/...
+
+      - name: build
+        shell: bash
+        env:
+          CGO_ENABLED: 0
+        run: |
+          set -eu
+          mkdir -p dist
+
+          # The version is stamped in, so what atom prints matches the tag it
+          # was built from.
+          flags="-s -w -X Atom3/src/misc.Version=${{ steps.version.outputs.tag }}"
+
+          build() {
+            GOOS=$1 GOARCH=$2 go build -ldflags "$flags" -o "$3" ./src
+          }
+
+          build windows amd64 installer/atom.exe
+          build linux amd64 build/linux-amd64/atom
+          build linux arm64 build/linux-arm64/atom
+
+      - name: package the portable archives
+        shell: bash
+        run: |
+          set -eu
+          for arch in amd64 arm64; do
+            dir="build/linux-$arch"
+            cp README.md LICENSE "$dir/"
+            cp -r docs packages "$dir/"
+            tar -czf "dist/atom-neo-linux-$arch.tar.gz" -C "$dir" .
+          done
+
+          mkdir -p build/windows-amd64
+          cp installer/atom.exe build/windows-amd64/
+          cp README.md LICENSE build/windows-amd64/
+          cp -r docs packages build/windows-amd64/
+          cd build/windows-amd64 && 7z a -tzip "../../dist/atom-neo-windows-amd64.zip" . >/dev/null
+
+      - name: install inno setup
+        run: choco install innosetup -y --no-progress
+
+      - name: build the windows installer
+        shell: bash
+        run: |
+          set -eu
+          # Whichever major version the runner ended up with.
+          iscc=$(find "/c/Program Files (x86)" "/c/Program Files" -maxdepth 2 -name ISCC.exe 2>/dev/null | head -1)
+          if [ -z "$iscc" ]; then
+            echo "could not find ISCC.exe"
+            exit 1
+          fi
+          echo "using $iscc"
+          MSYS2_ARG_CONV_EXCL='*' "$iscc" "/DAppVersion=${{ steps.version.outputs.bare }}" installer/atom-neo.iss
+
+      - name: checksums
+        shell: bash
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: draft the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Atom-Neo ${{ steps.version.outputs.tag }}
+          draft: true
+          generate_release_notes: true
+          files: |
+            dist/AtomNeoSetup-*.exe
+            dist/atom-neo-*.tar.gz
+            dist/atom-neo-*.zip
+            dist/SHA256SUMS.txt

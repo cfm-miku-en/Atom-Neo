@@ -34,11 +34,19 @@ print([hi("world")])
 
 ## Install
 
-```powershell
-powershell -ExecutionPolicy Bypass -File install.ps1
+**Windows** — grab `AtomNeoSetup-x.y.z.exe` from
+[Releases](https://github.com/cfm-miku-en/Atom-Neo/releases) and run it. Per user, no
+administrator prompt, uninstalls from Add or Remove Programs.
+
+**Linux**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/cfm-miku-en/Atom-Neo/main/install.sh | sh
 ```
 
-Or build it yourself: `go build -o atom ./src` (Go 1.26.5+).
+**From source** — `go build -o atom ./src` (Go 1.26.5+).
+
+macOS is not supported. Build from source if you want to try it.
 
 ## Speed
 
