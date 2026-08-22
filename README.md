@@ -2,7 +2,7 @@
   <img width="640" height=auto alt="Atom" src="https://github.com/cfm-miku-en/Atom-Neo/blob/main/image0.png?raw=true">
 </div>
 
-![stars](https://img.shields.io/github/stars/cfm-miku-en/Atom3?style=social)
+![stars](https://img.shields.io/github/stars/cfm-miku-en/Atom-Neo?style=social)
 ![engine](https://img.shields.io/badge/engine-Quark-7ee787)
 ![deps](https://img.shields.io/badge/language%20deps-0-blue)
 ![beginner](https://img.shields.io/badge/beginner-friendly-orange)
