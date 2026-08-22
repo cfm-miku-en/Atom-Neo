@@ -19,3 +19,4 @@ web.zip
 dist/
 installer/atom.exe
 *.test.exe
+HANDOFF.md
