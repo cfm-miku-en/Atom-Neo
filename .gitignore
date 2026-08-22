@@ -10,6 +10,7 @@ legacy/
 
 # build output and installed packages
 atom3.exe
+*.exe~
 atom3
 atom_modules/
 atom-linux-amd64
