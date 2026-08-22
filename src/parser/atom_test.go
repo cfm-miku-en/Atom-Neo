@@ -120,6 +120,23 @@ func TestNestedBracketsSurviveParsing(t *testing.T) {
 	}
 }
 
+// A block ended only on a line that was exactly "}", so the brace closing a
+// cuddled else was handed to the statement parser and rejected. Every other
+// curly braced language writes it this way, so it arrived constantly.
+func TestCuddledElse(t *testing.T) {
+	cases := map[string]string{
+		"var x = 0\nif [x > 1] {\n\tprint(\"big\")\n} else {\n\tprint(\"small\")\n}":                                        "small",
+		"var x = 2\nif [x > 5] {\n\tprint(\"big\")\n} else if [x > 1] {\n\tprint(\"mid\")\n} else {\n\tprint(\"small\")\n}": "mid",
+		"each n in [1, 2] {\n\tif [n == 1] {\n\t\tprint(\"one\")\n\t} else {\n\t\tprint(\"two\")\n\t}\n}":                   "one\ntwo",
+	}
+
+	for src, want := range cases {
+		if got := run(t, src); got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	}
+}
+
 func TestParseErrorsReportLineNumbers(t *testing.T) {
 	got := run(t, "print(\"a\")\nvar broken\nprint(\"b\")")
 

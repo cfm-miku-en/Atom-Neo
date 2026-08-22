@@ -18,7 +18,12 @@ func Compile(lines []string) []Node {
 }
 
 func CompileFile(file string, lines []string) []Node {
-	c := &compiler{lines: lines, file: file}
+	// Copied because a closing brace with a statement behind it is split in
+	// place, and the caller's slice should not change underneath it.
+	own := make([]string, len(lines))
+	copy(own, lines)
+
+	c := &compiler{lines: own, file: file}
 	return c.block(false)
 }
 
@@ -53,8 +58,20 @@ func (c *compiler) block(nested bool) []Node {
 			c.pos++
 			continue
 		}
-		if line == "}" {
-			c.pos++
+		if strings.HasPrefix(line, "}") {
+			rest := strings.TrimSpace(line[1:])
+			if rest == "" {
+				c.pos++
+				if nested {
+					return nodes
+				}
+				continue
+			}
+
+			// "} else {" and friends. The brace closes the block and whatever
+			// follows it is left to be read as the next line, so the else still
+			// finds its if.
+			c.lines[c.pos] = rest
 			if nested {
 				return nodes
 			}
