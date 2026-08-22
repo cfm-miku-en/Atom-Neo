@@ -111,6 +111,9 @@ const
 
 var
   Installed: Boolean;
+  { Where a previous install put itself. The wizard reads its starting state
+    before the app constant is initialised, so it cannot ask for that yet. }
+  InstallDir: string;
 
 { Explorer caches associations, so a new .atom icon would not appear until the
   next sign in without telling the shell to reread them. }
@@ -163,16 +166,17 @@ begin
     Classes + ProgId + '\shell\runkept\command', '', Value);
 end;
 
-function PathHasBin: Boolean;
+function PathHasDir(Dir: string): Boolean;
 var
   Existing: string;
 begin
-  if not RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', Existing) then
+  if (Dir = '') or
+     not RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', Existing) then
   begin
     Result := False;
     exit;
   end;
-  Result := Pos(';' + Lowercase(BinDir) + ';', ';' + Lowercase(Existing) + ';') > 0;
+  Result := Pos(';' + Lowercase(Dir) + ';', ';' + Lowercase(Existing) + ';') > 0;
 end;
 
 function NeedsAddPath(Param: string): Boolean;
@@ -250,10 +254,10 @@ begin
 end;
 
 function InitializeSetup: Boolean;
-var
-  Where: string;
 begin
-  Installed := RegQueryStringValue(HKEY_CURRENT_USER, UninstallKey, 'InstallLocation', Where);
+  Installed := RegQueryStringValue(HKEY_CURRENT_USER, UninstallKey, 'InstallLocation', InstallDir);
+  if Installed then
+    InstallDir := RemoveBackslashUnlessRoot(Trim(InstallDir));
   Result := True;
 end;
 
@@ -272,7 +276,7 @@ begin
     'Atom Neo is already installed. Change anything you like and press Next.';
 
   Selected := '';
-  if PathHasBin then
+  if PathHasDir(InstallDir + '\bin') then
     Selected := Selected + 'addtopath,';
   if AssociationOn then
   begin
@@ -282,7 +286,7 @@ begin
     if KeepOpenOn then
       Selected := Selected + 'associate\keepopen,';
   end;
-  if FileExists(ExpandConstant('{app}\{#ManagerExe}')) then
+  if FileExists(InstallDir + '\{#ManagerExe}') then
     Selected := Selected + 'manager,';
 
   WizardSelectTasks(Selected);
