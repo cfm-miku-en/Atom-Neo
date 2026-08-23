@@ -1,3 +1,5 @@
+# please remember: this is not my highest priority project. linux may not work, idk
+
 <div align="center">
   <img width="640" height=auto alt="Atom" src="https://github.com/cfm-miku-en/Atom-Neo/blob/main/image0.png?raw=true">
 </div>
