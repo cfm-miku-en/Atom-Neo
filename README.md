@@ -1,4 +1,4 @@
-# please remember: this is not my highest priority project. linux may not work, idk
+# please remember: this is not my highest priority project. linux may not work, idk. also please use the original atom from spacecat/wawadev if you can
 
 <div align="center">
   <img width="640" height=auto alt="Atom" src="https://github.com/cfm-miku-en/Atom-Neo/blob/main/image0.png?raw=true">
